@@ -4,15 +4,16 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: bff_postgres
-    restart: always
     environment:
-      POSTGRES_DB: bff_production
-      POSTGRES_USER: bff_user
-      POSTGRES_PASSWORD: secure_password_here
+      POSTGRES_DB: bride_future_foundation
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bff_network
 
   backend:
     build:
@@ -26,11 +27,13 @@ services:
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=bff_production
-      - DB_USERNAME=bff_user
-      - DB_PASSWORD=secure_password_here
+      - DB_DATABASE=bride_future_foundation
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=secret
     depends_on:
       - postgres
+    networks:
+      - bff_network
 
   frontend:
     build:
@@ -40,8 +43,31 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - bff_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: bff_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/var/www/html
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - bff_network
 
 volumes:
-  pgdata:
+  postgres_data:
+
+networks:
+  bff_network:
+    driver: bridge
+    
