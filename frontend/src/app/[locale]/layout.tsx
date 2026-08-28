@@ -1,26 +1,27 @@
 import React from 'react';
-import '../globals.css';
+import '@/styles/globals.css';
 
-export default function LocaleLayout({
-  children,
-  params: { locale },
-}: {
+export const metadata = {
+  title: 'Bride Future Foundation',
+  description: 'Empowering futures and securing community growth.',
+};
+
+interface RootLayoutProps {
   children: React.ReactNode;
-  params: { locale: string };
-}) {
+  params: {
+    locale: string;
+  };
+}
+
+export default async function RootLayout({
+  children,
+  params,
+}: RootLayoutProps) {
+  const { locale } = await params;
   return (
-    <html lang={locale}>
+    <html lang={locale || 'bn'}>
       <body className="bg-gray-50 text-gray-900 antialiased">
-        <header className="bg-white border-b border-gray-200 py-4 px-6 flex justify-between items-center">
-          <h1 className="font-bold text-xl text-primary-700">Bride Future Foundation</h1>
-          <nav className="space-x-4">
-            <a href="/bn" className="hover:underline">বাংলা</a>
-            <a href="/en" className="hover:underline">English</a>
-          </nav>
-        </header>
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <div id="app-root">{children}</div>
       </body>
     </html>
   );
