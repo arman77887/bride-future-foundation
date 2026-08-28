@@ -1,31 +1,35 @@
 import React from 'react';
-import { checkApiHealth } from '@/lib/api';
 
-export default async function HomePage({ params: { locale } }: { params: { locale: string } }) {
-  let apiStatus = 'Checking...';
-  try {
-    const health = await checkApiHealth();
-    apiStatus = health.message;
-  } catch (err) {
-    apiStatus = 'API Unreachable';
-  }
-
+export default async function HomePage({ params }: { params: { locale: string } }) {
+  const { locale } = await params;
   const isBn = locale === 'bn';
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <h2 className="text-3xl font-bold mb-4">
-        {isBn ? 'ব্রাইড ফিউচার ফাউন্ডেশন (বিএফএফ)' : 'Bride Future Foundation (BFF)'}
-      </h2>
-      <p className="text-gray-700 mb-6">
-        {isBn 
-          ? 'আমাদের প্ল্যাটফর্মে স্বাগতম। এটি অফিশিয়াল পোর্টাল।' 
-          : 'Welcome to our platform. This is the official portal.'}
-      </p>
-      <div className="p-4 bg-white rounded-lg shadow border border-gray-200">
-        <h3 className="font-semibold text-lg mb-2">{isBn ? 'ব্যাকএন্ড সংযোগ স্থিতি:' : 'Backend Health Status:'}</h3>
-        <p className="text-sm font-mono bg-gray-100 p-2 rounded">{apiStatus}</p>
+    <main className="min-h-screen flex flex-col items-center justify-center p-8">
+      <div className="max-w-3xl text-center">
+        <h1 className="text-4xl font-bold tracking-tight text-emerald-700 sm:text-6xl mb-6">
+          {isBn ? 'ব্রাইড ফিউচার ফাউন্ডেশন' : 'Bride Future Foundation'}
+        </h1>
+        <p className="text-lg text-gray-700 mb-8">
+          {isBn
+            ? 'সমাজ কল্যাণ, স্বচ্ছ অনুদান ব্যবস্থাপনা এবং দক্ষ জনবল তৈরিতে আমরা প্রতিজ্ঞাবদ্ধ।'
+            : 'Committed to social welfare, transparent donation management, and empowered leadership.'}
+        </p>
+        <div className="flex justify-center gap-4">
+          <a
+            href={`/${locale}/donate`}
+            className="rounded-md bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-emerald-500 transition"
+          >
+            {isBn ? 'অনুদান দিন' : 'Donate Now'}
+          </a>
+          <a
+            href={`/${locale}/apply`}
+            className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-emerald-700 shadow border border-emerald-300 hover:bg-emerald-50 transition"
+          >
+            {isBn ? 'আবেদন করুন' : 'Apply Now'}
+          </a>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
