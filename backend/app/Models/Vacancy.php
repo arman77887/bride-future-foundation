@@ -5,30 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Vacancy extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'department_id',
-        'title',
-        'slug',
-        'description',
+        'position_id',
+        'required_count',
+        'title_bn',
+        'title_en',
+        'description_bn',
+        'description_en',
         'requirements',
-        'employment_type',
-        'salary_min',
-        'salary_max',
         'deadline',
-        'is_active',
+        'status',
+        'created_by',
     ];
 
     protected $casts = [
-        'salary_min' => 'decimal:2',
-        'salary_max' => 'decimal:2',
-        'deadline' => 'date',
-        'is_active' => 'boolean',
+        'required_count' => 'integer',
+        'deadline' => 'datetime',
     ];
 
     public function department()
@@ -36,8 +34,18 @@ class Vacancy extends Model
         return $this->belongsTo(Department::class);
     }
 
+    public function position()
+    {
+        return $this->belongsTo(Position::class);
+    }
+
     public function applications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

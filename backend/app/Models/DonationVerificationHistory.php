@@ -12,6 +12,8 @@ class DonationVerificationHistory extends Model
 
     public $timestamps = false; // Immutable append-only history
 
+    protected $table = 'donation_verification_history';
+
     protected $fillable = [
         'donation_id',
         'reviewer_id',

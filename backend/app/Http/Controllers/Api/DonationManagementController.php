@@ -7,6 +7,7 @@ use App\Http\Requests\Donation\SubmitDonationRequest;
 use App\Http\Requests\Donation\TransitionDonationRequest;
 use App\Http\Resources\DonationResource;
 use App\Http\Resources\DonationVerificationHistoryResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Donation;
 use App\Services\DonationService;
 use Illuminate\Http\JsonResponse;
@@ -17,18 +18,23 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DonationManagementController extends Controller
 {
+    use AuthorizesRequests;
     protected DonationService $donationService;
 
     public function __construct(DonationService $donationService)
     {
-        $this->donationService = donationService;
+        $this->donationService = $donationService;
     }
 
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Donation::class);
 
-        $query = Donation::with(['verifier', 'verificationHistories.reviewer']);
+        $query = Donation::with([
+            'donationMethod',
+            'verifier',
+            'verificationHistories.reviewer',
+        ]);
 
         if ($request->has('status')) {
             $query->where('status', $request->status);

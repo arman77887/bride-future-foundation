@@ -15,16 +15,22 @@ class OfficerController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $officers = OfficerProfile::with(['department', 'position'])->where('is_public', true)->paginate(15);
+        $officers = OfficerProfile::with(['department', 'position'])
+            ->where('is_public', true)
+            ->paginate(15);
+
         return OfficerProfileResource::collection($officers);
     }
 
     public function store(StoreOfficerRequest $request): JsonResponse
     {
-        $officer = OfficerProfile::create(array_merge($request->validated(), [
-            'status' => 'pending',
-            'is_public' => false,
-        ]));
+        $officer = OfficerProfile::create(array_merge(
+            $request->validated(),
+            [
+                'status' => 'SUBMITTED',
+                'is_public' => false,
+            ]
+        ));
 
         return response()->json([
             'message' => 'Officer profile submitted successfully',
@@ -32,17 +38,30 @@ class OfficerController extends Controller
         ], 201);
     }
 
-    public function verify(VerifyOfficerRequest $request, string $id): JsonResponse
-    {
+    public function verify(
+        VerifyOfficerRequest $request,
+        string $id
+    ): JsonResponse {
         $officer = OfficerProfile::findOrFail($id);
-        $officer->update(['status' => $request->status]);
+
+        $previousStatus = $officer->status;
+
+        $newStatus = strtoupper($request->validated('status'));
+
+        $officer->update([
+            'status' => $newStatus,
+            'is_public' => $newStatus === 'APPROVED',
+        ]);
 
         OfficerVerificationHistory::create([
             'officer_profile_id' => $officer->id,
-            'verified_by' => $request->user()->id ?? auth()->id(),
-            'action' => $request->status,
-            'remarks' => $request->remarks,
+            'reviewer_id' => $request->user()->id,
+            'previous_status' => $previousStatus,
+            'new_status' => $newStatus,
+            'review_note' => $request->validated('remarks'),
         ]);
+
+        $officer->load(['department', 'position']);
 
         return response()->json([
             'message' => 'Officer verification status updated',

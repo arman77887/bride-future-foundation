@@ -14,13 +14,61 @@ class StoreVacancyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'department_id' => ['required', 'uuid', 'exists:departments,id'],
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:vacancies,slug'],
-            'description' => ['required', 'string'],
-            'requirements' => ['required', 'string'],
-            'employment_type' => ['required', 'string'],
-            'deadline' => ['required', 'date'],
+            'department_id' => [
+                'required',
+                'uuid',
+                'exists:departments,id',
+            ],
+
+            'position_id' => [
+                'required',
+                'uuid',
+                'exists:positions,id',
+            ],
+
+            'required_count' => [
+                'sometimes',
+                'integer',
+                'min:1',
+            ],
+
+            'title_bn' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'title_en' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'description_bn' => [
+                'nullable',
+                'string',
+            ],
+
+            'description_en' => [
+                'nullable',
+                'string',
+            ],
+
+            'requirements' => [
+                'nullable',
+                'string',
+            ],
+
+            'deadline' => [
+                'required',
+                'date',
+            ],
+
+            'status' => [
+                'sometimes',
+                'string',
+                'in:DRAFT,PUBLISHED,CLOSED',
+            ],
         ];
     }
 }

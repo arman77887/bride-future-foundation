@@ -27,7 +27,8 @@ export default function ApplyPage() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/v1/applications', {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
+      const response = await fetch(`${apiBase}/job-applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

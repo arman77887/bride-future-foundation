@@ -5,12 +5,13 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->citext('email')->unique();
+            $table->string('email');
             $table->string('password');
             $table->string('status')->default('INVITED');
             $table->text('two_factor_secret')->nullable();
@@ -20,8 +21,16 @@ return new class extends Migration {
             $table->softDeletes();
         });
 
-        DB::statement("ALTER TABLE users ADD CONSTRAINT check_user_status CHECK (status IN ('INVITED', 'ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED'));");
+        DB::statement(
+            'ALTER TABLE users ALTER COLUMN email TYPE citext USING email::citext'
+        );
+
+        DB::statement(
+            "ALTER TABLE users ADD CONSTRAINT check_user_status CHECK (status IN ('INVITED', 'ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED'))"
+        );
+
         Schema::table('users', function (Blueprint $table) {
+            $table->unique('email');
             $table->index('status');
         });
     }

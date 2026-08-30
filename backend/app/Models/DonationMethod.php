@@ -5,19 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DonationMethod extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'name_bn',
         'name_en',
+        'type',
+        'account_identifier',
         'instructions_bn',
         'instructions_en',
-        'payment_type',
-        'account_identifier',
         'is_active',
         'display_order',
     ];

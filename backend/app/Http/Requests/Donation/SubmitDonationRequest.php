@@ -14,6 +14,7 @@ class SubmitDonationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'donation_method_id' => ['required', 'uuid', 'exists:donation_methods,id'],
             'donor_name' => ['nullable', 'string', 'max:255'],
             'donor_email' => ['nullable', 'email', 'max:255'],
             'donor_phone' => ['nullable', 'string', 'max:20'],

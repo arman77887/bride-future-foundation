@@ -1,28 +1,29 @@
 import React from 'react';
-import '@/styles/globals.css';
+import Navbar from '@/components/common/Navbar';
+import { Footer } from '@/components/common/Footer';
 
-export const metadata = {
-  title: 'Bride Future Foundation',
-  description: 'Empowering futures and securing community growth.',
-};
-
-interface RootLayoutProps {
+interface LocaleLayoutProps {
   children: React.ReactNode;
   params: {
     locale: string;
   };
 }
 
-export default async function RootLayout({
+export default function LocaleLayout({
   children,
   params,
-}: RootLayoutProps) {
-  const { locale } = await params;
+}: LocaleLayoutProps) {
+  const locale = params.locale === 'en' ? 'en' : 'bn';
+
   return (
-    <html lang={locale || 'bn'}>
-      <body className="bg-gray-50 text-gray-900 antialiased">
-        <div id="app-root">{children}</div>
-      </body>
-    </html>
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+      <Navbar locale={locale} />
+
+      <main className="flex-1 w-full">
+        {children}
+      </main>
+
+      <Footer />
+    </div>
   );
 }

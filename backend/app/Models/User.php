@@ -13,6 +13,9 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasUuids, Notifiable, SoftDeletes;
 
+    protected $keyType = 'string';
+    public $incrementing = false;
+
     protected $fillable = [
         'email',
         'password',
@@ -44,8 +47,24 @@ class User extends Authenticatable
 
     public function hasPermission(string $permissionSlug): bool
     {
-        return $this->roles()->whereHas('permissions', function ($query) use ($permissionSlug) {
-            $query->where('slug', $permissionSlug);
-        })->exists();
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permissionSlug) {
+                $query->where('slug', $permissionSlug);
+            })
+            ->exists();
+    }
+
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->roles()
+            ->where('slug', $roleSlug)
+            ->exists();
+    }
+
+    public function hasAnyRole(array $roleSlugs): bool
+    {
+        return $this->roles()
+            ->whereIn('slug', $roleSlugs)
+            ->exists();
     }
 }

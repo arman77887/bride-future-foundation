@@ -14,8 +14,15 @@ class VerifyOfficerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'string', 'in:verified,rejected'],
-            'remarks' => ['nullable', 'string'],
+            'status' => [
+                'required',
+                'string',
+                'in:APPROVED,REJECTED',
+            ],
+            'remarks' => [
+                'nullable',
+                'string',
+            ],
         ];
     }
 }

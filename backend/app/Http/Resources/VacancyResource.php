@@ -11,17 +11,29 @@ class VacancyResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'title' => $this->title,
-            'slug' => $this->slug,
-            'description' => $this->description,
+
+            'department_id' => $this->department_id,
+            'position_id' => $this->position_id,
+            'required_count' => $this->required_count,
+
+            'title_bn' => $this->title_bn,
+            'title_en' => $this->title_en,
+
+            'description_bn' => $this->description_bn,
+            'description_en' => $this->description_en,
+
             'requirements' => $this->requirements,
-            'employment_type' => $this->employment_type,
-            'salary_min' => $this->salary_min,
-            'salary_max' => $this->salary_max,
-            'deadline' => $this->deadline->toDateString(),
-            'is_active' => $this->is_active,
+
+            'deadline' => $this->deadline?->toISOString(),
+
+            'status' => $this->status,
+
             'department' => $this->whenLoaded('department'),
+            'position' => $this->whenLoaded('position'),
+
+            'created_by' => $this->created_by,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

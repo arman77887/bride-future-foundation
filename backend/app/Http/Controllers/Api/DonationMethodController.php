@@ -40,7 +40,7 @@ class DonationMethodController extends Controller
     public function destroy(string $id): JsonResponse
     {
         $method = DonationMethod::findOrFail($id);
-        $method->delete();
+        $method->forceDelete();
         return response()->json([
             'message' => 'Donation method deleted successfully',
         ]);

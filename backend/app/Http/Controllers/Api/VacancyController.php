@@ -13,17 +13,30 @@ class VacancyController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $vacancies = Vacancy::with('department')->where('is_active', true)->paginate(15);
+        $vacancies = Vacancy::with(['department', 'position'])
+            ->where('status', 'PUBLISHED')
+            ->where('deadline', '>=', now())
+            ->orderBy('deadline')
+            ->paginate(15);
+
         return VacancyResource::collection($vacancies);
     }
 
     public function store(StoreVacancyRequest $request): JsonResponse
     {
-        $vacancy = Vacancy::create($request->validated());
+        $data = $request->validated();
+
+        $data['required_count'] = $data['required_count'] ?? 1;
+        $data['status'] = $data['status'] ?? 'DRAFT';
+        $data['created_by'] = $request->user()->id;
+
+        $vacancy = Vacancy::create($data);
 
         return response()->json([
             'message' => 'Vacancy created successfully',
-            'data' => new VacancyResource($vacancy),
+            'data' => new VacancyResource(
+                $vacancy->load(['department', 'position'])
+            ),
         ], 201);
     }
 }

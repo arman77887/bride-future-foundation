@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
+        Schema::dropIfExists('donations');
         Schema::create('donations', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->uuid('donation_method_id');
