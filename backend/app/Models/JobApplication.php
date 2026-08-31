@@ -25,4 +25,12 @@ class JobApplication extends Model
     {
         return $this->belongsTo(Vacancy::class);
     }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(
+            ApplicationStatusHistory::class,
+            'application_id'
+        )->latest('created_at');
+    }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '@/components/common/Navbar';
-import { Footer } from '@/components/common/Footer';
+import Footer from '@/components/common/Footer';
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export default function LocaleLayout({
         {children}
       </main>
 
-      <Footer />
+      <Footer locale={locale} />
     </div>
   );
 }

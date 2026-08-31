@@ -27,7 +27,7 @@ export default function ApplyPage() {
     setErrorMessage('');
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://bridefuturefoundation.duckdns.org/api/v1';
       const response = await fetch(`${apiBase}/job-applications`, {
         method: 'POST',
         headers: {

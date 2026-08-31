@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\JobApplication\StoreJobApplicationRequest;
 use App\Models\JobApplication;
+use App\Models\ApplicationStatusHistory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
@@ -24,6 +25,15 @@ class JobApplicationController extends Controller
         $data['status'] = 'PENDING';
 
         $application = JobApplication::create($data);
+
+        ApplicationStatusHistory::create([
+            'application_id' => $application->id,
+            'changed_by' => null,
+            'previous_status' => 'NEW',
+            'new_status' => 'PENDING',
+            'note' => 'Application submitted.',
+            'created_at' => now(),
+        ]);
 
         return response()->json([
             'success' => true,

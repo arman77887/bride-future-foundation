@@ -46,17 +46,17 @@ Route::prefix('v1')->group(function () {
         Route::get('/admin/applications', [
             AdminJobApplicationController::class,
             'index'
-        ]);
+        ])->middleware('permission:applications.view');
 
         Route::get('/admin/applications/{id}', [
             AdminJobApplicationController::class,
             'show'
-        ]);
+        ])->middleware('permission:applications.view');
 
         Route::patch('/admin/applications/{id}/status', [
             AdminJobApplicationController::class,
             'updateStatus'
-        ]);
+        ])->middleware('permission:applications.status');
 
 
     });
