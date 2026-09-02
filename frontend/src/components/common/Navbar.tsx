@@ -198,8 +198,8 @@ export default function Navbar({
             <div className="min-w-0">
               <div className="truncate text-base font-black leading-tight text-gray-950 sm:text-lg lg:text-xl">
                 {isBn
-                  ? 'ব্রাইড ফিউচার ফাউন্ডেশন'
-                  : 'Bright Further Foundation'}
+                  ? 'ব্রাইট ফিউচার ফাউন্ডেশন'
+                  : 'Bright Future Foundation'}
               </div>
 
               <div className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-wide text-emerald-700 sm:text-xs">
@@ -397,8 +397,8 @@ export default function Navbar({
                 <div>
                   <div className="text-sm font-black text-gray-950">
                     {isBn
-                      ? 'ব্রাইড ফিউচার ফাউন্ডেশন'
-                      : 'Bright Further Foundation'}
+                      ? 'ব্রাইট ফিউচার ফাউন্ডেশন'
+                      : 'Bright Future Foundation'}
                   </div>
 
                   <div className="text-[10px] font-semibold text-emerald-700">

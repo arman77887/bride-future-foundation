@@ -99,8 +99,8 @@ export default async function ContactPage({
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
             {hero.subtitle ||
               (isBn
-                ? 'Bright Further Foundation-এর সাথে যোগাযোগ করতে নিচের তথ্য ব্যবহার করুন।'
-                : 'Get in touch with Bright Further Foundation using the information below.')}
+                ? 'Bright Future Foundation-এর সাথে যোগাযোগ করতে নিচের তথ্য ব্যবহার করুন।'
+                : 'Get in touch with Bright Future Foundation using the information below.')}
           </p>
         </div>
       </section>
@@ -219,8 +219,8 @@ export default async function ContactPage({
       <section className="px-6 py-14 text-center">
         <h2 className="text-2xl font-bold text-slate-900">
           {isBn
-            ? 'Bright Further Foundation-এর সাথে যুক্ত থাকুন'
-            : 'Stay connected with Bright Further Foundation'}
+            ? 'Bright Future Foundation-এর সাথে যুক্ত থাকুন'
+            : 'Stay connected with Bright Future Foundation'}
         </h2>
 
         <Link

@@ -347,7 +347,7 @@ export default async function HomePage({
                   locale,
                   hero?.badge_bn,
                   hero?.badge_en,
-                  'Bride Future Foundation'
+                  'Bright Future Foundation'
                 )}
               </div>
 
@@ -488,7 +488,7 @@ export default async function HomePage({
                   locale,
                   intro?.content_bn,
                   intro?.content_en,
-                  'Bright Further Foundation is a humanitarian and social welfare initiative.'
+                  'Bright Future Foundation is a humanitarian and social welfare initiative.'
                 )}
               </p>
 

@@ -2,7 +2,7 @@ import React from 'react';
 import '@/styles/globals.css';
 
 export const metadata = {
-  title: 'Bright Further Foundation',
+  title: 'Bright Future Foundation',
   description: 'Empowering futures and securing community growth.',
 };
 

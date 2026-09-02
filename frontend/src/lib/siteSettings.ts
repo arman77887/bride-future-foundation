@@ -6,14 +6,14 @@ export interface SiteSettings {
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
-  site_name_bn: 'ব্রাইড ফিউচার ফাউন্ডেশন',
-  site_name_en: 'Bride Future Foundation',
+  site_name_bn: 'ব্রাইট ফিউচার ফাউন্ডেশন',
+  site_name_en: 'Bright Future Foundation',
 };
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'https://bridefuturefoundation.duckdns.org/api/v1';
+    'https://brightfuturefoundation.duckdns.org/api/v1';
 
   try {
     const response = await fetch(`${baseUrl}/settings`, {

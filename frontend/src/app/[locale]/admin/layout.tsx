@@ -175,7 +175,7 @@ export default function AdminLayout({
 
                 <div className="min-w-0">
                   <div className="truncate text-base font-bold text-emerald-400">
-                    Bright Further Foundation
+                    Bright Future Foundation
                   </div>
 
                   <div className="mt-1 text-xs text-gray-400">
