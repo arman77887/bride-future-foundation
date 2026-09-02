@@ -1,59 +1,461 @@
 import Link from 'next/link';
+import { api } from '@/services/api';
 
-export default function HomePage({
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+type Locale = 'bn' | 'en';
+
+interface ContentItem {
+  id: string;
+  title_bn: string;
+  title_en: string;
+  slug?: string;
+  description_bn?: string;
+  description_en?: string;
+  content_bn?: string;
+  content_en?: string;
+  status?: string;
+  published_at?: string | null;
+  cover_media_id?: string | null;
+  cover_image_url?: string | null;
+  created_at?: string;
+}
+
+interface HomepageContent {
+  projects: ContentItem[];
+  news: ContentItem[];
+  notices: ContentItem[];
+}
+
+interface HomepageSettings {
+  cover_media_id?: string | null;
+  cover_image_url?: string | null;
+}
+
+interface SystemSetting {
+  key: string;
+  value?: string | null;
+  type?: string;
+  media_url?: string | null;
+}
+
+interface HomepageData {
+  metadata?: {
+    announcement?: {
+      enabled?: boolean;
+      bn?: string;
+      en?: string;
+    };
+    hero?: {
+      badge_bn?: string;
+      badge_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      description_bn?: string;
+      description_en?: string;
+      primary_text_bn?: string;
+      primary_text_en?: string;
+      primary_link?: string;
+      secondary_text_bn?: string;
+      secondary_text_en?: string;
+      secondary_link?: string;
+    };
+    commitment?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      items?: Array<{
+        bn: string;
+        en: string;
+      }>;
+    };
+    intro?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      content_bn?: string;
+      content_en?: string;
+    };
+    impact?: {
+      items?: Array<{
+        number: string;
+        bn: string;
+        en: string;
+      }>;
+    };
+    activities?: Array<{
+      number: string;
+      title_bn: string;
+      title_en: string;
+      text_bn: string;
+      text_en: string;
+      enabled?: boolean;
+    }>;
+    mission?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      content_bn?: string;
+      content_en?: string;
+    };
+    vision?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      content_bn?: string;
+      content_en?: string;
+    };
+    projects?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      limit?: number;
+    };
+    news?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      limit?: number;
+    };
+    notices?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      limit?: number;
+    };
+    gallery?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      button_bn?: string;
+      button_en?: string;
+    };
+    donation?: {
+      label_bn?: string;
+      label_en?: string;
+      title_bn?: string;
+      title_en?: string;
+      content_bn?: string;
+      content_en?: string;
+      button_bn?: string;
+      button_en?: string;
+      button_link?: string;
+    };
+  };
+}
+
+async function getHomepage(): Promise<HomepageData | null> {
+  try {
+    const response = await api.get('/cms-pages/homepage', {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+    return response.data?.data ?? null;
+  } catch (error) {
+    console.error('Homepage CMS API error:', error);
+    return null;
+  }
+}
+
+async function getHomepageSettings(): Promise<HomepageSettings> {
+  try {
+    const response = await api.get('/settings');
+    const data = response?.data?.data;
+
+    const settings: SystemSetting[] = Array.isArray(data) ? data : [];
+
+    const cover = settings.find(
+      (item) => item.key === 'homepage.cover_media_id'
+    );
+
+    return {
+      cover_media_id: cover?.value ?? null,
+      cover_image_url: cover?.media_url ?? null,
+    };
+  } catch (error) {
+    console.error('Homepage settings API error:', error);
+    return {
+      cover_media_id: null,
+      cover_image_url: null,
+    };
+  }
+}
+
+async function getHomepageContent(): Promise<HomepageContent> {
+  try {
+    const [projectsRes, newsRes, noticesRes] = await Promise.all([
+      api.get('/projects'),
+      api.get('/news'),
+      api.get('/notices'),
+    ]);
+
+    const getItems = (response: any): ContentItem[] => {
+      const data = response?.data?.data;
+
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.data)) return data.data;
+
+      return [];
+    };
+
+    return {
+      projects: getItems(projectsRes),
+      news: getItems(newsRes),
+      notices: getItems(noticesRes),
+    };
+  } catch (error) {
+    console.error('Failed to load homepage content:', error);
+
+    return {
+      projects: [],
+      news: [],
+      notices: [],
+    };
+  }
+}
+
+function resolveMediaUrl(url?: string | null) {
+  if (!url) return null;
+
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL?.replace(
+      /\/api\/v1\/?$/,
+      '',
+    ) || 'http://localhost:8000';
+
+  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
+function localized(
+  locale: Locale,
+  bn?: string,
+  en?: string,
+  fallback = ''
+) {
+  return locale === 'bn'
+    ? bn || en || fallback
+    : en || bn || fallback;
+}
+
+export default async function HomePage({
   params,
 }: {
   params: { locale: string };
 }) {
-  const locale = params.locale === 'bn' ? 'bn' : 'en';
-  const isBn = locale === 'bn';
+  const locale: Locale = params.locale === 'en' ? 'en' : 'bn';
+  const [cms, homepageContent, homepageSettings] = await Promise.all([
+    getHomepage(),
+    getHomepageContent(),
+    getHomepageSettings(),
+  ]);
+
+  const projectItems = homepageContent.projects.slice(
+    0,
+    cms?.metadata?.projects?.limit ?? 3,
+  );
+
+  const newsItems = homepageContent.news.slice(
+    0,
+    cms?.metadata?.news?.limit ?? 3,
+  );
+
+  const noticeItems = homepageContent.notices.slice(
+    0,
+    cms?.metadata?.notices?.limit ?? 3,
+  );
+
+
+  const metadata = cms?.metadata ?? {};
+
+  const announcement = metadata.announcement;
+  const hero = metadata.hero;
+  const commitment = metadata.commitment;
+  const intro = metadata.intro;
+  const impact = metadata.impact;
+  const activities = metadata.activities ?? [];
+  const mission = metadata.mission;
+  const vision = metadata.vision;
+  const projects = metadata.projects;
+  const news = metadata.news;
+  const notices = metadata.notices;
+  const gallery = metadata.gallery;
+  const donation = metadata.donation;
+
+  const coverImageUrl = homepageSettings.cover_image_url
+    ? resolveMediaUrl(homepageSettings.cover_image_url)
+    : null;
 
   return (
     <main className="bg-white text-gray-900">
 
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-800 to-teal-700 text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-white" />
-          <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-emerald-300" />
+      {/* ANNOUNCEMENT */}
+      {announcement?.enabled !== false && (
+        <div className="bg-emerald-800 text-white">
+          <div className="mx-auto flex max-w-7xl items-center justify-center px-5 py-2.5 text-center text-xs font-medium sm:px-8">
+            <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-emerald-200" />
+            {localized(
+              locale,
+              announcement?.bn,
+              announcement?.en,
+              'Working together for humanity, responsibility and a better future'
+            )}
+          </div>
         </div>
+      )}
 
-        <div className="relative mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-10 lg:py-32">
-          <div className="max-w-4xl">
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden bg-gray-950 text-white">
+        {/* Homepage Cover Photo */}
+        {coverImageUrl && (
+          <img
+            src={coverImageUrl}
+            alt={locale === 'bn' ? 'হোমপেজ কভার ছবি' : 'Homepage cover photo'}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
 
-            <div className="mb-6 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
-              <span className="mr-2 h-2 w-2 rounded-full bg-emerald-300" />
-              {isBn
-                ? 'মানবসেবা • সামাজিক উন্নয়ন • ভবিষ্যৎ নির্মাণ'
-                : 'Humanity • Social Development • Building the Future'}
+        {/* Readability overlay */}
+        <div className="absolute inset-0 bg-gray-950/55" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/65 to-gray-950/35" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-gray-950/20" />
+
+        {/* Decorative glow */}
+        <div className="absolute -right-32 -top-32 h-[500px] w-[500px] rounded-full bg-emerald-500/15 blur-3xl" />
+        <div className="absolute -bottom-40 -left-20 h-[450px] w-[450px] rounded-full bg-teal-500/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-5 py-24 sm:px-8 sm:py-28 lg:px-10 lg:py-36">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+
+            {/* HERO CONTENT */}
+            <div className="bff-reveal max-w-4xl">
+              <div className="inline-flex items-center rounded-full border border-emerald-300/30 bg-emerald-950/40 px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-200 shadow-lg backdrop-blur-sm">
+                {localized(
+                  locale,
+                  hero?.badge_bn,
+                  hero?.badge_en,
+                  'Bride Future Foundation'
+                )}
+              </div>
+
+              <h1 className="mt-7 max-w-4xl text-4xl font-black leading-[1.06] tracking-tight drop-shadow-2xl sm:text-5xl lg:text-7xl">
+                {localized(
+                  locale,
+                  hero?.title_bn,
+                  hero?.title_en,
+                  'Working for People. Building a Better Future.'
+                )}
+              </h1>
+
+              <p className="mt-7 max-w-2xl text-base leading-8 text-gray-200 drop-shadow-lg sm:text-lg">
+                {localized(
+                  locale,
+                  hero?.description_bn,
+                  hero?.description_en,
+                  'We work toward a better and more dignified future through humanitarian support, social development and opportunities for people and communities.'
+                )}
+              </p>
+
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Link
+                  href={`/${locale}${hero?.primary_link || '/donate'}`}
+                  className="bff-button rounded-xl bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500 active:scale-95"
+                >
+                  {localized(
+                    locale,
+                    hero?.primary_text_bn,
+                    hero?.primary_text_en,
+                    'Support Our Work'
+                  )}
+                </Link>
+
+                <Link
+                  href={`/${locale}${hero?.secondary_link || '/about'}`}
+                  className="bff-button rounded-xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-bold text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 active:scale-95"
+                >
+                  {localized(
+                    locale,
+                    hero?.secondary_text_bn,
+                    hero?.secondary_text_en,
+                    'Discover Our Work'
+                  )}
+                </Link>
+              </div>
             </div>
 
-            <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-7xl">
-              {isBn
-                ? 'ব্রাইট ফিউচার ফাউন্ডেশন'
-                : 'Bright Future Foundation'}
-            </h1>
+            {/* COMMITMENT */}
+            <div className="bff-scale hidden lg:block">
+              <div className="relative mx-auto max-w-md">
+                <div className="absolute -inset-5 rounded-[2rem] border border-white/15" />
 
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-emerald-50 sm:text-xl">
-              {isBn
-                ? 'মানুষের পাশে দাঁড়িয়ে একটি সুন্দর, নিরাপদ ও সম্ভাবনাময় ভবিষ্যৎ গড়ে তোলাই আমাদের লক্ষ্য।'
-                : 'Our mission is to stand beside people and help build a better, safer and more promising future.'}
-            </p>
+                <div className="relative rounded-[2rem] border border-white/15 bg-gray-950/45 p-8 shadow-2xl backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-6">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
+                        {localized(
+                          locale,
+                          commitment?.label_bn,
+                          commitment?.label_en,
+                          'Our Commitment'
+                        )}
+                      </p>
 
-            <div className="mt-9 flex flex-wrap gap-4">
-              <Link
-                href={`/${locale}/donate`}
-                className="rounded-xl bg-white px-7 py-3.5 font-bold text-emerald-800 shadow-xl transition hover:-translate-y-1 hover:bg-emerald-50"
-              >
-                {isBn ? 'সহযোগিতা করুন' : 'Support Us'}
-              </Link>
+                      <h2 className="mt-2 text-2xl font-black">
+                        {localized(
+                          locale,
+                          commitment?.title_bn,
+                          commitment?.title_en,
+                          'Moving Forward Together'
+                        )}
+                      </h2>
+                    </div>
 
-              <Link
-                href={`/${locale}/officers`}
-                className="rounded-xl border border-white/40 bg-white/5 px-7 py-3.5 font-bold text-white backdrop-blur transition hover:bg-white/10"
-              >
-                {isBn ? 'আমাদের সম্পর্কে' : 'Learn About Us'}
-              </Link>
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lg">
+                      {coverImageUrl ? (
+                        <img
+                          src={coverImageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center bg-emerald-600 text-xl font-black text-white">
+                          B
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-5 pt-6">
+                    {(commitment?.items ?? []).map((item, index) => (
+                      <div
+                        key={`${item.en}-${index}`}
+                        className="flex items-center gap-4"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-bold text-emerald-300">
+                          0{index + 1}
+                        </div>
+
+                        <span className="font-semibold text-gray-200">
+                          {localized(locale, item.bn, item.en)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -61,284 +463,501 @@ export default function HomePage({
       </section>
 
       {/* INTRO */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
-
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <section className="border-b border-gray-100 bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
 
             <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">
-                {isBn ? 'ব্রাইট ফিউচার ফাউন্ডেশন' : 'Bright Future Foundation'}
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
+                {localized(locale, intro?.label_bn, intro?.label_en, 'Who We Are')}
               </p>
 
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
-                {isBn
-                  ? 'মানুষের জন্য কাজ, ভবিষ্যতের জন্য অঙ্গীকার'
-                  : 'Working for People, Committed to the Future'}
+              <h2 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">
+                {localized(
+                  locale,
+                  intro?.title_bn,
+                  intro?.title_en,
+                  'For a More Caring and Responsible Society'
+                )}
               </h2>
+            </div>
 
-              <p className="mt-6 text-lg leading-8 text-gray-600">
-                {isBn
-                  ? 'ব্রাইট ফিউচার ফাউন্ডেশন একটি মানবিক ও সামাজিক কল্যাণমূলক উদ্যোগ। মানুষের প্রয়োজনের সময়ে পাশে থাকা, সামাজিক উন্নয়নে ভূমিকা রাখা এবং ইতিবাচক পরিবর্তনে সহযোগিতা করাই আমাদের অঙ্গীকার।'
-                  : 'Bright Future Foundation is a humanitarian and social welfare initiative focused on supporting people, contributing to community development and creating positive change.'}
+            <div>
+              <p className="text-lg leading-8 text-gray-600">
+                {localized(
+                  locale,
+                  intro?.content_bn,
+                  intro?.content_en,
+                  'Bright Further Foundation is a humanitarian and social welfare initiative.'
+                )}
               </p>
 
               <Link
-                href={`/${locale}/officers`}
-                className="mt-7 inline-flex font-bold text-emerald-700 hover:text-emerald-900"
+                href={`/${locale}/about`}
+                className="mt-6 inline-flex items-center font-bold text-emerald-700 transition hover:text-emerald-900"
               >
-                {isBn ? 'আরও জানুন →' : 'Learn More →'}
+                {locale === 'bn' ? 'ফাউন্ডেশন সম্পর্কে জানুন' : 'Learn more about us'}
+                <span className="ml-2">→</span>
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
-
-              <div className="rounded-3xl bg-emerald-50 p-7">
-                <div className="text-3xl">🤝</div>
-                <h3 className="mt-4 font-bold">
-                  {isBn ? 'মানবসেবা' : 'Humanitarian Service'}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">
-                  {isBn
-                    ? 'মানুষের প্রয়োজনের সময়ে সহযোগিতা।'
-                    : 'Supporting people when they need it.'}
-                </p>
-              </div>
-
-              <div className="mt-8 rounded-3xl bg-teal-50 p-7">
-                <div className="text-3xl">🌱</div>
-                <h3 className="mt-4 font-bold">
-                  {isBn ? 'উন্নয়ন' : 'Development'}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">
-                  {isBn
-                    ? 'সমাজের ইতিবাচক পরিবর্তনে ভূমিকা।'
-                    : 'Contributing to positive community change.'}
-                </p>
-              </div>
-
-              <div className="rounded-3xl bg-amber-50 p-7">
-                <div className="text-3xl">❤️</div>
-                <h3 className="mt-4 font-bold">
-                  {isBn ? 'সহযোগিতা' : 'Community'}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">
-                  {isBn
-                    ? 'একসঙ্গে এগিয়ে যাওয়ার অঙ্গীকার।'
-                    : 'A commitment to moving forward together.'}
-                </p>
-              </div>
-
-              <div className="mt-8 rounded-3xl bg-blue-50 p-7">
-                <div className="text-3xl">🌍</div>
-                <h3 className="mt-4 font-bold">
-                  {isBn ? 'ভবিষ্যৎ' : 'Future'}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">
-                  {isBn
-                    ? 'একটি সুন্দর ভবিষ্যৎ গড়ার প্রত্যয়।'
-                    : 'Building toward a better future.'}
-                </p>
-              </div>
-
-            </div>
           </div>
         </div>
       </section>
 
-      {/* MISSION */}
-      <section className="bg-gray-50">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
+      {/* IMPACT */}
+      <section className="bg-emerald-50">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
+          <div className="grid grid-cols-2 divide-x divide-emerald-200 md:grid-cols-4">
+            {(impact?.items ?? []).map((item) => (
+              <div key={item.number} className="px-4 text-center md:px-8">
+                <div className="text-3xl font-black text-emerald-800 sm:text-4xl">
+                  {item.number}
+                </div>
 
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">
-              {isBn ? 'আমাদের উদ্দেশ্য' : 'Our Purpose'}
-            </p>
-
-            <h2 className="mt-3 text-3xl font-black sm:text-4xl">
-              {isBn ? 'লক্ষ্য ও ভিশন' : 'Mission & Vision'}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-
-            <div className="rounded-3xl bg-emerald-800 p-8 text-white shadow-xl sm:p-10">
-              <div className="text-4xl">🎯</div>
-
-              <h3 className="mt-6 text-2xl font-black">
-                {isBn ? 'আমাদের লক্ষ্য' : 'Our Mission'}
-              </h3>
-
-              <p className="mt-4 leading-8 text-emerald-50">
-                {isBn
-                  ? 'মানবিক সহায়তা, সামাজিক দায়িত্ব ও মানুষের ক্ষমতায়নের মাধ্যমে একটি দায়িত্বশীল ও কল্যাণমুখী সমাজ গড়ে তোলা।'
-                  : 'To contribute to a responsible and caring society through humanitarian support, social responsibility and community empowerment.'}
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-gray-900 p-8 text-white shadow-xl sm:p-10">
-              <div className="text-4xl">🌍</div>
-
-              <h3 className="mt-6 text-2xl font-black">
-                {isBn ? 'আমাদের ভিশন' : 'Our Vision'}
-              </h3>
-
-              <p className="mt-4 leading-8 text-gray-300">
-                {isBn
-                  ? 'এমন একটি ভবিষ্যৎ তৈরি করা যেখানে মানুষ মর্যাদা, নিরাপত্তা ও সম্ভাবনার সঙ্গে এগিয়ে যেতে পারে।'
-                  : 'To help create a future where people can move forward with dignity, security and opportunity.'}
-              </p>
-            </div>
-
+                <div className="mt-2 text-xs font-bold uppercase tracking-wide text-gray-600 sm:text-sm">
+                  {localized(locale, item.bn, item.en)}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ACTIVITIES */}
       <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
 
-          <div className="text-center">
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">
-              {isBn ? 'আমাদের কার্যক্রম' : 'What We Do'}
-            </p>
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div className="max-w-2xl">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
+                {locale === 'bn' ? 'আমরা কী করি' : 'What We Do'}
+              </p>
 
-            <h2 className="mt-3 text-3xl font-black sm:text-4xl">
-              {isBn ? 'আমাদের উদ্যোগ' : 'Our Initiatives'}
-            </h2>
+              <h2 className="mt-3 text-3xl font-black sm:text-4xl">
+                {locale === 'bn' ? 'আমাদের কার্যক্রম' : 'Our Areas of Work'}
+              </h2>
+            </div>
 
-            <p className="mx-auto mt-4 max-w-2xl leading-7 text-gray-600">
-              {isBn
-                ? 'মানবিক সহায়তা, সামাজিক উন্নয়ন ও জনকল্যাণমূলক বিভিন্ন কার্যক্রমের মাধ্যমে আমরা কাজ করতে চাই।'
-                : 'We aim to work through humanitarian support, social development and community-focused initiatives.'}
-            </p>
+            <Link
+              href={`/${locale}/projects`}
+              className="font-bold text-emerald-700 hover:text-emerald-900"
+            >
+              {locale === 'bn' ? 'সব কার্যক্রম দেখুন →' : 'View all activities →'}
+            </Link>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {activities
+              .filter((item) => item.enabled !== false)
+              .map((item) => (
+                <div
+                  key={item.number}
+                  className="group rounded-2xl border border-gray-200 bg-white p-7 transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-black text-emerald-700">
+                      {item.number}
+                    </span>
 
-            {[
-              {
-                icon: '❤️',
-                bn: 'মানবিক সহায়তা',
-                en: 'Humanitarian Support',
-                textBn: 'প্রয়োজনে মানুষের পাশে দাঁড়ানো এবং সহযোগিতার হাত বাড়িয়ে দেওয়া।',
-                textEn: 'Standing beside people in need and providing meaningful support.',
-              },
-              {
-                icon: '🌱',
-                bn: 'সামাজিক উন্নয়ন',
-                en: 'Social Development',
-                textBn: 'সমাজের ইতিবাচক পরিবর্তন ও উন্নয়নে ভূমিকা রাখা।',
-                textEn: 'Contributing to positive change and sustainable community development.',
-              },
-              {
-                icon: '🤝',
-                bn: 'কমিউনিটি সহযোগিতা',
-                en: 'Community Support',
-                textBn: 'মানুষকে একসঙ্গে নিয়ে একটি শক্তিশালী ও সহায়ক সমাজ গড়ে তোলা।',
-                textEn: 'Bringing people together to build a stronger and supportive community.',
-              },
-            ].map((item) => (
-              <div
-                key={item.en}
-                className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
-                  {item.icon}
+                    <span className="text-xl text-gray-300 transition group-hover:text-emerald-500">
+                      ↗
+                    </span>
+                  </div>
+
+                  <h3 className="mt-10 text-xl font-black">
+                    {localized(locale, item.title_bn, item.title_en)}
+                  </h3>
+
+                  <p className="mt-4 leading-7 text-gray-600">
+                    {localized(locale, item.text_bn, item.text_en)}
+                  </p>
+
+                  <div className="mt-7 h-1 w-10 rounded-full bg-emerald-600 transition-all group-hover:w-20" />
                 </div>
+              ))}
+          </div>
 
-                <h3 className="mt-6 text-xl font-bold">
-                  {isBn ? item.bn : item.en}
-                </h3>
+        </div>
+      </section>
 
-                <p className="mt-3 leading-7 text-gray-600">
-                  {isBn ? item.textBn : item.textEn}
-                </p>
-              </div>
-            ))}
+      {/* MISSION / VISION */}
+      <section className="bg-gray-950 text-white">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+
+          <div className="grid gap-6 md:grid-cols-2">
+
+            <div className="rounded-3xl bg-emerald-800 p-8 sm:p-10">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
+                {localized(locale, mission?.label_bn, mission?.label_en, 'Our Mission')}
+              </span>
+
+              <h2 className="mt-5 text-2xl font-black sm:text-3xl">
+                {localized(
+                  locale,
+                  mission?.title_bn,
+                  mission?.title_en,
+                  'Creating meaningful impact for people'
+                )}
+              </h2>
+
+              <p className="mt-5 leading-8 text-emerald-50">
+                {localized(
+                  locale,
+                  mission?.content_bn,
+                  mission?.content_en
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-8 sm:p-10">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
+                {localized(locale, vision?.label_bn, vision?.label_en, 'Our Vision')}
+              </span>
+
+              <h2 className="mt-5 text-2xl font-black sm:text-3xl">
+                {localized(
+                  locale,
+                  vision?.title_bn,
+                  vision?.title_en,
+                  'Building a future full of possibility'
+                )}
+              </h2>
+
+              <p className="mt-5 leading-8 text-gray-300">
+                {localized(
+                  locale,
+                  vision?.content_bn,
+                  vision?.content_en
+                )}
+              </p>
+            </div>
 
           </div>
         </div>
       </section>
 
-      {/* DONATION CTA */}
-      <section className="bg-gray-50">
-        <div className="mx-auto max-w-5xl px-6 py-20 text-center sm:px-8">
+      {/* PROJECTS */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-5">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
+                {localized(
+                  locale,
+                  projects?.label_bn,
+                  projects?.label_en,
+                  'Our Projects',
+                )}
+              </p>
 
-          <div className="rounded-3xl bg-gradient-to-br from-emerald-800 to-teal-700 p-10 text-white shadow-2xl sm:p-14">
-
-            <div className="text-5xl">❤️</div>
-
-            <h2 className="mt-6 text-3xl font-black sm:text-4xl">
-              {isBn
-                ? 'আপনার সহযোগিতা একটি পরিবর্তনের অংশ হতে পারে'
-                : 'Your Support Can Be Part of Positive Change'}
-            </h2>
-
-            <p className="mx-auto mt-5 max-w-2xl leading-8 text-emerald-50">
-              {isBn
-                ? 'ব্রাইট ফিউচার ফাউন্ডেশনের কার্যক্রমে আপনার সহযোগিতা আমাদের আরও মানুষের পাশে দাঁড়াতে সাহায্য করবে।'
-                : 'Your support can help Bright Future Foundation reach and support more people through our initiatives.'}
-            </p>
+              <h2 className="mt-2 text-2xl font-black">
+                {localized(
+                  locale,
+                  projects?.title_bn,
+                  projects?.title_en,
+                  'Projects',
+                )}
+              </h2>
+            </div>
 
             <Link
-              href={`/${locale}/donate`}
-              className="mt-8 inline-flex rounded-xl bg-white px-8 py-3.5 font-bold text-emerald-800 shadow-lg hover:bg-emerald-50"
+              href={`/${locale}/projects`}
+              className="text-sm font-bold text-emerald-700"
             >
-              {isBn ? 'অনুদান / সহযোগিতা করুন' : 'Donate / Support'}
+              {locale === 'bn' ? 'সব দেখুন' : 'View all'}
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {projectItems.map((item) => {
+              const title =
+                locale === 'bn' ? item.title_bn : item.title_en;
+
+              const description =
+                locale === 'bn'
+                  ? item.description_bn
+                  : item.description_en;
+
+              const imageUrl = resolveMediaUrl(item.cover_image_url);
+
+              return (
+                <Link
+                  key={item.id}
+                  href={`/${locale}/projects`}
+                  className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                >
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={title}
+                      className="h-52 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <div className="flex h-52 items-center justify-center bg-emerald-50 text-sm font-bold text-emerald-700">
+                      {locale === 'bn' ? 'ছবি নেই' : 'No image'}
+                    </div>
+                  )}
+
+                  <div className="p-6">
+                    <h3 className="font-black text-gray-900 group-hover:text-emerald-700">
+                      {title}
+                    </h3>
+
+                    {description && (
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-500">
+                        {description}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* NEWS + NOTICES */}
+      <section className="bg-gray-50">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10">
+          <div className="grid gap-12 lg:grid-cols-2">
+
+            {/* NEWS */}
+            <div>
+              <div className="flex items-center justify-between border-b border-gray-200 pb-5">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
+                    {localized(
+                      locale,
+                      news?.label_bn,
+                      news?.label_en,
+                      'Latest',
+                    )}
+                  </p>
+
+                  <h2 className="mt-2 text-2xl font-black">
+                    {localized(
+                      locale,
+                      news?.title_bn,
+                      news?.title_en,
+                      'News & Updates',
+                    )}
+                  </h2>
+                </div>
+
+                <Link
+                  href={`/${locale}/news`}
+                  className="text-sm font-bold text-emerald-700"
+                >
+                  {locale === 'bn' ? 'সব দেখুন' : 'View all'}
+                </Link>
+              </div>
+
+              <div className="divide-y divide-gray-100">
+                {newsItems.map((item) => {
+                  const title =
+                    locale === 'bn' ? item.title_bn : item.title_en;
+
+                  const content =
+                    locale === 'bn'
+                      ? item.content_bn
+                      : item.content_en;
+
+                  const imageUrl = resolveMediaUrl(item.cover_image_url);
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/${locale}/news`}
+                      className="group flex gap-5 py-6"
+                    >
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={title}
+                          className="h-20 w-28 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-20 w-28 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[9px] font-bold text-emerald-700">
+                          NEWS
+                        </div>
+                      )}
+
+                      <div>
+                        <h3 className="font-bold text-gray-900 group-hover:text-emerald-700">
+                          {title}
+                        </h3>
+
+                        {content && (
+                          <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                            {content}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* NOTICES */}
+            <div>
+              <div className="flex items-center justify-between border-b border-gray-200 pb-5">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
+                    {localized(
+                      locale,
+                      notices?.label_bn,
+                      notices?.label_en,
+                      'Important Information',
+                    )}
+                  </p>
+
+                  <h2 className="mt-2 text-2xl font-black">
+                    {localized(
+                      locale,
+                      notices?.title_bn,
+                      notices?.title_en,
+                      'Notices',
+                    )}
+                  </h2>
+                </div>
+
+                <Link
+                  href={`/${locale}/notices`}
+                  className="text-sm font-bold text-emerald-700"
+                >
+                  {locale === 'bn' ? 'সব দেখুন' : 'View all'}
+                </Link>
+              </div>
+
+              <div className="divide-y divide-gray-100">
+                {noticeItems.map((item) => {
+                  const title =
+                    locale === 'bn' ? item.title_bn : item.title_en;
+
+                  const content =
+                    locale === 'bn'
+                      ? item.content_bn
+                      : item.content_en;
+
+                  const imageUrl = resolveMediaUrl(item.cover_image_url);
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/${locale}/notices`}
+                      className="group flex gap-4 py-6"
+                    >
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={title}
+                          className="h-20 w-28 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-600" />
+                      )}
+
+                      <div>
+                        <h3 className="font-bold text-gray-900 group-hover:text-emerald-700">
+                          {title}
+                        </h3>
+
+                        {content && (
+                          <p className="mt-2 line-clamp-2 text-sm text-gray-500">
+                            {content}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* GALLERY */}
+      <section className="bg-emerald-50">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
+          <div className="flex flex-col justify-between gap-6 rounded-3xl border border-emerald-100 bg-white p-8 shadow-sm md:flex-row md:items-center sm:p-10">
+
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
+                {localized(locale, gallery?.label_bn, gallery?.label_en, 'Our Moments')}
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black sm:text-3xl">
+                {localized(
+                  locale,
+                  gallery?.title_bn,
+                  gallery?.title_en,
+                  'Explore moments from our activities'
+                )}
+              </h2>
+            </div>
+
+            <Link
+              href={`/${locale}/gallery`}
+              className="shrink-0 rounded-xl bg-gray-950 px-6 py-3.5 text-center text-sm font-bold text-white transition hover:bg-emerald-800"
+            >
+              {localized(locale, gallery?.button_bn, gallery?.button_en, 'View Gallery')}
             </Link>
 
           </div>
         </div>
       </section>
 
-      {/* CONTACT */}
+      {/* DONATION */}
       <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
 
-          <div className="text-center">
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">
-              {isBn ? 'যোগাযোগ' : 'Contact'}
-            </p>
+          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-900 to-teal-700 px-7 py-14 text-center text-white shadow-2xl sm:px-12 sm:py-16">
 
-            <h2 className="mt-3 text-3xl font-black sm:text-4xl">
-              {isBn
-                ? 'আমাদের সঙ্গে যোগাযোগ করুন'
-                : 'Get In Touch'}
-            </h2>
+            <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-white/5" />
+            <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-white/5" />
 
-            <p className="mx-auto mt-4 max-w-2xl leading-7 text-gray-600">
-              {isBn
-                ? 'প্রতিষ্ঠানের কার্যক্রম বা সহযোগিতা সম্পর্কে জানতে আমাদের সঙ্গে যোগাযোগ করুন।'
-                : 'Contact us to learn more about our activities or ways to support the foundation.'}
-            </p>
+            <div className="relative">
+
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
+                {localized(locale, donation?.label_bn, donation?.label_en, 'Be Part of the Change')}
+              </p>
+
+              <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-black sm:text-4xl lg:text-5xl">
+                {localized(
+                  locale,
+                  donation?.title_bn,
+                  donation?.title_en,
+                  'Your support can help build a better future'
+                )}
+              </h2>
+
+              <p className="mx-auto mt-5 max-w-2xl leading-8 text-emerald-50">
+                {localized(
+                  locale,
+                  donation?.content_bn,
+                  donation?.content_en
+                )}
+              </p>
+
+              <Link
+                href={`/${locale}${donation?.button_link || '/donate'}`}
+                className="mt-8 inline-flex rounded-xl bg-white px-8 py-3.5 font-bold text-emerald-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-50"
+              >
+                {localized(
+                  locale,
+                  donation?.button_bn,
+                  donation?.button_en,
+                  'Support the Foundation →'
+                )}
+              </Link>
+
+            </div>
           </div>
 
-          <div className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-2">
-
-            <a
-              href="mailto:contact@brightfuturefoundation.org"
-              className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center transition hover:border-emerald-300 hover:bg-emerald-50"
-            >
-              <div className="text-3xl">📧</div>
-              <h3 className="mt-3 font-bold">Email</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                contact@brightfuturefoundation.org
-              </p>
-            </a>
-
-            <a
-              href="https://wa.me/"
-              className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center transition hover:border-emerald-300 hover:bg-emerald-50"
-            >
-              <div className="text-3xl">💬</div>
-              <h3 className="mt-3 font-bold">WhatsApp</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                {isBn ? 'WhatsApp-এ যোগাযোগ করুন' : 'Contact us on WhatsApp'}
-              </p>
-            </a>
-
-          </div>
         </div>
       </section>
 

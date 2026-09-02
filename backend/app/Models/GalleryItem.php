@@ -14,6 +14,7 @@ class GalleryItem extends Model
 
     protected $fillable = [
         'gallery_album_id',
+        'media_id',
         'title_bn',
         'title_en',
         'file_url',
@@ -28,5 +29,10 @@ class GalleryItem extends Model
     public function album()
     {
         return $this->belongsTo(GalleryAlbum::class, 'gallery_album_id');
+    }
+
+    public function media()
+    {
+        return $this->belongsTo(Media::class, 'media_id');
     }
 }

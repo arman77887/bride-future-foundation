@@ -21,6 +21,7 @@ class News extends Model
         'status',
         'published_at',
         'created_by',
+        'cover_media_id',
     ];
 
     protected $casts = [
@@ -31,4 +32,9 @@ class News extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    public function coverMedia()
+    {
+        return $this->belongsTo(Media::class, 'cover_media_id');
+    }
+
 }

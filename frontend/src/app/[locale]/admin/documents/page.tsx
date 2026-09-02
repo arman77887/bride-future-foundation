@@ -1,14 +1,21 @@
 'use client';
 
+import AdminCrud from '@/components/admin/AdminCrud';
+
 export default function DocumentsPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Documents</h1>
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <p className="text-gray-600">
-          Document management will appear here.
-        </p>
-      </div>
-    </div>
+    <AdminCrud
+      title="Public Documents"
+      titleBn="পাবলিক ডকুমেন্ট ব্যবস্থাপনা"
+      endpoint="/public-documents"
+      fields={[
+        'title_bn',
+        'title_en',
+        'description_bn',
+        'description_en',
+        'document_url',
+        'document_type',
+      ]}
+    />
   );
 }

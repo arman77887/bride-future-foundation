@@ -10,6 +10,8 @@ class Media extends Model
 {
     use HasFactory, HasUuids;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'filename',
         'storage_key',

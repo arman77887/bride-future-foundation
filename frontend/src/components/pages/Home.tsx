@@ -5,7 +5,7 @@ export const Home: React.FC = () => {
   return (
     <div className="text-center py-16">
       <h1 className="text-4xl font-extrabold text-brand-green mb-4">
-        Welcome to Bride Future Foundation
+        Welcome to Bright Further Foundation
       </h1>
 
       <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">

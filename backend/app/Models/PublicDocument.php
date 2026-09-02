@@ -17,6 +17,8 @@ class PublicDocument extends Model
         'file_size',
     ];
 
+    const UPDATED_AT = null;
+
     protected $casts = [
         'file_size' => 'integer',
     ];

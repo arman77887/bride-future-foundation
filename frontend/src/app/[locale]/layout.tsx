@@ -19,7 +19,7 @@ export default function LocaleLayout({
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
       <Navbar locale={locale} />
 
-      <main className="flex-1 w-full">
+      <main className="bff-public-main flex-1 w-full">
         {children}
       </main>
 

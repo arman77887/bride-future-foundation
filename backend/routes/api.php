@@ -11,17 +11,27 @@ use App\Http\Controllers\Api\DonationController;
 use App\Http\Controllers\Api\DonationMethodController;
 use App\Http\Controllers\Api\DonationManagementController;
 use App\Http\Controllers\Api\CmsPageController;
+use App\Http\Controllers\Api\ContactMessageController;
+use App\Http\Controllers\Api\SystemSettingController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\NoticeController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\GalleryItemController;
 use App\Http\Controllers\Api\PublicDocumentController;
 use App\Http\Controllers\Api\CmsMenuController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\SubscriptionController;
 
 Route::prefix('v1')->group(function () {
+    Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe'])->middleware('throttle:10,1');
+    Route::post('/subscriptions/unsubscribe', [SubscriptionController::class, 'unsubscribe'])->middleware('throttle:10,1');
+Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class, 'unsubscribeByToken']);
+        Route::post('/contact-messages', [ContactMessageController::class, 'store'])
+        ->middleware('throttle:10,1');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -29,12 +39,16 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/register', [AuthController::class, 'register'])
+        ->middleware('throttle:5,1');
+
     Route::post('/auth/login', [AuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/auth/me', [AuthController::class, 'me']);
+        Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
 
         /*
@@ -137,6 +151,23 @@ Route::prefix('v1')->group(function () {
         'show'
     ]);
 
+    /*
+    |--------------------------------------------------------------------------
+    | SYSTEM SETTINGS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/settings', [
+        SystemSettingController::class,
+        'index'
+    ]);
+
+    Route::get('/settings/{key}', [
+        SystemSettingController::class,
+        'show'
+    ]);
+
+
 
     /*
     |--------------------------------------------------------------------------
@@ -148,6 +179,51 @@ Route::prefix('v1')->group(function () {
         'auth:sanctum',
         'admin',
     ])->group(function () {
+
+
+        /*
+        | Contact Messages
+        */
+
+        Route::get('/admin/contact-messages', [
+            ContactMessageController::class,
+            'index'
+        ]);
+
+        Route::get('/admin/contact-messages/{id}', [
+            ContactMessageController::class,
+            'show'
+        ]);
+
+        Route::put('/admin/contact-messages/{id}/status', [
+            ContactMessageController::class,
+            'updateStatus'
+        ]);
+
+        Route::delete('/admin/contact-messages/{id}', [
+            ContactMessageController::class,
+            'destroy'
+        ]);
+
+        /*
+        | System Settings Management
+        */
+
+        Route::post('/settings', [
+            SystemSettingController::class,
+            'store'
+        ])->middleware('permission:settings.create');
+
+        Route::put('/settings/{id}', [
+            SystemSettingController::class,
+            'update'
+        ])->middleware('permission:settings.update');
+
+        Route::delete('/settings/{id}', [
+            SystemSettingController::class,
+            'destroy'
+        ])->middleware('permission:settings.delete');
+
 
         /*
         | Dashboard
@@ -162,6 +238,12 @@ Route::prefix('v1')->group(function () {
         /*
         | Officers
         */
+
+        Route::get('/admin/officers', [
+            OfficerController::class,
+            'adminIndex'
+        ])->middleware('permission:officers.view');
+
 
         Route::post('/officers', [
             OfficerController::class,
@@ -268,20 +350,56 @@ Route::prefix('v1')->group(function () {
             'destroy'
         ])->middleware('permission:news.delete');
 
+        Route::put('/news/{id}', [
+            NewsController::class,
+            'update'
+        ])->middleware('permission:news.update');
+
+
         Route::post('/events', [
             EventController::class,
             'store'
         ])->middleware('permission:events.create');
+
+        Route::put('/events/{id}', [
+            EventController::class,
+            'update'
+        ])->middleware('permission:events.update');
+
+        Route::delete('/events/{id}', [
+            EventController::class,
+            'destroy'
+        ])->middleware('permission:events.delete');
 
         Route::post('/projects', [
             ProjectController::class,
             'store'
         ])->middleware('permission:projects.create');
 
+        Route::put('/projects/{id}', [
+            ProjectController::class,
+            'update'
+        ])->middleware('permission:projects.update');
+
+        Route::delete('/projects/{id}', [
+            ProjectController::class,
+            'destroy'
+        ])->middleware('permission:projects.delete');
+
         Route::post('/notices', [
             NoticeController::class,
             'store'
         ])->middleware('permission:notices.create');
+
+        Route::put('/notices/{id}', [
+            NoticeController::class,
+            'update'
+        ])->middleware('permission:notices.update');
+
+        Route::delete('/notices/{id}', [
+            NoticeController::class,
+            'destroy'
+        ])->middleware('permission:notices.delete');
 
 
         /*
@@ -292,21 +410,91 @@ Route::prefix('v1')->group(function () {
             GalleryController::class,
             'store'
         ])->middleware('permission:gallery.create');
+        Route::put("/gallery/{id}", [
+            GalleryController::class,
+            "update"
+        ])->middleware("permission:gallery.update");
+
+        Route::delete("/gallery/{id}", [
+            GalleryController::class,
+            "destroy"
+        ])->middleware("permission:gallery.delete");
+
+
+        Route::post('/gallery/items', [
+            GalleryItemController::class,
+            'store'
+        ])->middleware('permission:gallery.create');
+
+        Route::put('/gallery/items/{id}', [
+            GalleryItemController::class,
+            'update'
+        ])->middleware('permission:gallery.update');
+
+        Route::delete('/gallery/items/{id}', [
+            GalleryItemController::class,
+            'destroy'
+        ])->middleware('permission:gallery.delete');
 
         Route::post('/public-documents', [
             PublicDocumentController::class,
             'store'
         ])->middleware('permission:documents.create');
 
+        Route::put('/public-documents/{id}', [
+            PublicDocumentController::class,
+            'update'
+        ])->middleware('permission:documents.update');
+
+        Route::delete('/public-documents/{id}', [
+            PublicDocumentController::class,
+            'destroy'
+        ])->middleware('permission:documents.delete');
+
         Route::post('/cms-menus', [
             CmsMenuController::class,
             'store'
         ])->middleware('permission:cms.update');
 
+        Route::put('/cms-pages/{id}/sections', [
+            CmsPageController::class,
+            'updateSections'
+        ])->middleware('permission:cms.update');
+
+        Route::put('/cms-menus/{slug}/items', [
+            CmsMenuController::class,
+            'updateItems'
+        ])->middleware('permission:cms.update');
+
+        Route::delete('/cms-menus/{slug}/items/{id}', [
+            CmsMenuController::class,
+            'deleteItem'
+        ])->middleware('permission:cms.update');
+
+        Route::get('/media', [
+            MediaController::class,
+            'index'
+        ])->middleware('permission:media.view');
+
+        Route::get('/media', [
+            MediaController::class,
+            'index'
+        ])->middleware('permission:media.view');
+
         Route::post('/media', [
             MediaController::class,
             'store'
         ])->middleware('permission:media.create');
+
+        Route::put('/media/{id}', [
+            MediaController::class,
+            'update'
+        ])->middleware('permission:media.update');
+
+        Route::delete('/media/{id}', [
+            MediaController::class,
+            'destroy'
+        ])->middleware('permission:media.delete');
 
     });
 

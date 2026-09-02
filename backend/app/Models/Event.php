@@ -22,10 +22,16 @@ class Event extends Model
         'end_time',
         'status',
         'registration_link',
+        'cover_media_id',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
     ];
+    public function coverMedia()
+    {
+        return $this->belongsTo(Media::class, 'cover_media_id');
+    }
+
 }

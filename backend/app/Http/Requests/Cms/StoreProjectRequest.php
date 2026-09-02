@@ -20,6 +20,7 @@ class StoreProjectRequest extends FormRequest
             'description_bn' => ['required', 'string'],
             'description_en' => ['required', 'string'],
             'status' => ['required', 'string', 'in:ACTIVE,COMPLETED,ARCHIVED'],
+            'cover_media_id' => ['nullable', 'uuid', 'exists:media,id'],
         ];
     }
 }

@@ -71,7 +71,7 @@ export default function AboutPage({
             <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
               {isBn
                 ? 'ব্রাইড ফিউচার ফাউন্ডেশন'
-                : 'Bride Future Foundation'}
+                : 'Bright Further Foundation'}
             </h1>
 
             <p className="mt-6 max-w-3xl text-lg leading-8 text-emerald-50 sm:text-xl">

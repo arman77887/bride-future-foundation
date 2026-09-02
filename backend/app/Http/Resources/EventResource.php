@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class EventResource extends JsonResource
 {
@@ -22,6 +23,10 @@ class EventResource extends JsonResource
             'end_time' => $this->end_time,
             'status' => $this->status,
             'registration_link' => $this->registration_link,
+            'cover_media_id' => $this->cover_media_id,
+            'cover_image_url' => $this->cover_media_id && $this->coverMedia
+                ? Storage::disk('public')->url($this->coverMedia->storage_key)
+                : null,
             'created_at' => $this->created_at,
         ];
     }

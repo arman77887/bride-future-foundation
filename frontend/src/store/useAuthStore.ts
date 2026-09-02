@@ -11,6 +11,25 @@ interface AuthState {
   isLoading: boolean;
 
   login: (email: string, password: string) => Promise<void>;
+  register: (
+    name: string,
+    email: string,
+    phone: string,
+    address: string,
+    password: string,
+    password_confirmation: string
+  ) => Promise<void>;
+  updateProfile: (
+    name: string,
+    email: string,
+    phone: string,
+    address: string
+  ) => Promise<void>;
+  changePassword: (
+    current_password: string,
+    password: string,
+    password_confirmation: string
+  ) => Promise<void>;
   restore: () => Promise<void>;
   logout: () => Promise<void>;
   clearAuth: () => void;
@@ -43,6 +62,77 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: data,
       token: access_token,
       isAuthenticated: true,
+      isLoading: false,
+    });
+  },
+
+  register: async (
+    name,
+    email,
+    phone,
+    address,
+    password,
+    password_confirmation
+  ) => {
+    const response = await api.post('/auth/register', {
+      name,
+      email,
+      phone,
+      address,
+      password,
+      password_confirmation,
+    });
+
+    const data = response.data?.data;
+
+    if (!data) {
+      throw new Error('Registration failed.');
+    }
+  },
+
+  updateProfile: async (name, email, phone, address) => {
+    const response = await api.put('/auth/profile', {
+      name,
+      email,
+      phone,
+      address,
+    });
+
+    const data = response.data?.data;
+
+    if (!data) {
+      throw new Error('Profile update failed.');
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_user', JSON.stringify(data));
+    }
+
+    set({
+      user: data,
+    });
+  },
+
+  changePassword: async (
+    current_password,
+    password,
+    password_confirmation
+  ) => {
+    await api.post('/auth/change-password', {
+      current_password,
+      password,
+      password_confirmation,
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+    }
+
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
       isLoading: false,
     });
   },

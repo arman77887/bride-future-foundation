@@ -1,7 +1,10 @@
 export interface User {
   id: string;
+  uid: string;
   name?: string;
   email: string;
+  phone?: string;
+  address?: string;
   status: string;
   two_factor_enabled: boolean;
   roles?: string[];

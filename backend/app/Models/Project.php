@@ -17,5 +17,11 @@ class Project extends Model
         'description_bn',
         'description_en',
         'status',
+        'cover_media_id',
     ];
+    public function coverMedia()
+    {
+        return $this->belongsTo(Media::class, 'cover_media_id');
+    }
+
 }

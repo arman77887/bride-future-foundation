@@ -16,7 +16,11 @@ class GalleryAlbumResource extends JsonResource
             'slug' => $this->slug,
             'description_bn' => $this->description_bn,
             'description_en' => $this->description_en,
-            'items' => $this->whenLoaded('items'),
+
+            'items' => GalleryItemResource::collection(
+                $this->whenLoaded('items')
+            ),
+
             'created_at' => $this->created_at,
         ];
     }

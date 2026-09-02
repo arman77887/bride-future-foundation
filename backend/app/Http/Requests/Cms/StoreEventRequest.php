@@ -25,6 +25,7 @@ class StoreEventRequest extends FormRequest
             'end_time' => ['required', 'date', 'after_or_equal:start_time'],
             'status' => ['required', 'string', 'in:DRAFT,PUBLISHED,ARCHIVED'],
             'registration_link' => ['nullable', 'url', 'max:255'],
+            'cover_media_id' => ['nullable', 'uuid', 'exists:media,id'],
         ];
     }
 }

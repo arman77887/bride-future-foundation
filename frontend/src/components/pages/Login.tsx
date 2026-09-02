@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export const Login: React.FC = () => {
@@ -9,14 +9,26 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
 
   const locale = params?.locale === 'en' ? 'en' : 'bn';
   const isBn = locale === 'bn';
+
+  React.useEffect(() => {
+    if (searchParams.get('registered') === '1') {
+      setSuccess(
+        isBn
+          ? 'রেজিস্ট্রেশন সফল হয়েছে। এখন আপনার অ্যাকাউন্টে লগইন করুন।'
+          : 'Registration successful. Please log in to your account.'
+      );
+    }
+  }, [searchParams, isBn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +39,28 @@ export const Login: React.FC = () => {
     try {
       await login(email, password);
 
-      // Login successful → Admin Dashboard
-      router.push(`/${locale}/admin/dashboard`);
+      const loggedInUser = useAuthStore.getState().user;
+      const roles = loggedInUser?.roles ?? [];
+
+      const adminRoles = [
+        'developer',
+        'president',
+        'super_admin',
+        'account_manager',
+        'recruitment_manager',
+        'secretary',
+        'media_manager',
+        'officer',
+        'auditor',
+      ];
+
+      const isAdmin = roles.some((role) => adminRoles.includes(role));
+
+      if (isAdmin) {
+        router.push(`/${locale}/admin/dashboard`);
+      } else {
+        router.push(`/${locale}/profile`);
+      }
     } catch (err) {
       setError(
         isBn
@@ -58,6 +90,12 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Error */}
+        {success && (
+          <div className="mb-5 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700">
+            {success}
+          </div>
+        )}
+
         {error && (
           <div className="mb-5 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
             {error}

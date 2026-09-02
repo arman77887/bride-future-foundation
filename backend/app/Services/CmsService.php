@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CmsService
 {
-    public function logAudit(Model $model, string $action, ?int $userId, ?string $ip, ?string $userAgent, ?array $oldValues = null, ?array $newValues = null): void
+    public function logAudit(Model $model, string $action, ?string $userId, ?string $ip, ?string $userAgent, ?array $oldValues = null, ?array $newValues = null): void
     {
         AuditLog::create([
             'actor_id' => $userId,

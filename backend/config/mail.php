@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'contact_recipient' => env('CONTACT_MESSAGE_EMAIL', 'tha.crypticx.official@gmail.com'),
     'default' => env('MAIL_MAILER', 'smtp'),
     'mailers' => [
         'smtp' => [

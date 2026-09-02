@@ -20,6 +20,7 @@ class StoreNewsRequest extends FormRequest
             'content_bn' => ['required', 'string'],
             'content_en' => ['required', 'string'],
             'status' => ['required', 'string', 'in:DRAFT,PUBLISHED,ARCHIVED'],
+            'cover_media_id' => ['nullable', 'uuid', 'exists:media,id'],
         ];
     }
 }

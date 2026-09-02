@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '../../../store/useAuthStore';
+import SiteLogo from '../../../components/common/SiteLogo';
 
 interface MenuItem {
   labelBn: string;
@@ -33,7 +34,12 @@ const menuItems: MenuItem[] = [
     href: 'applications',
   },
   {
-    labelBn: 'অফিসার',
+    labelBn: 'যোগাযোগের বার্তা',
+    labelEn: 'Contact Messages',
+    href: 'contact-messages',
+  },
+  {
+    labelBn: 'কর্মকর্তাবৃন্দ',
     labelEn: 'Officers',
     href: 'officers',
   },
@@ -43,14 +49,9 @@ const menuItems: MenuItem[] = [
     href: 'vacancies',
   },
   {
-    labelBn: 'সংবাদ',
+    labelBn: 'নিউজ',
     labelEn: 'News',
     href: 'news',
-  },
-  {
-    labelBn: 'নোটিশ',
-    labelEn: 'Notices',
-    href: 'notices',
   },
   {
     labelBn: 'ইভেন্ট',
@@ -58,14 +59,14 @@ const menuItems: MenuItem[] = [
     href: 'events',
   },
   {
-    labelBn: 'প্রজেক্ট',
+    labelBn: 'প্রকল্প',
     labelEn: 'Projects',
     href: 'projects',
   },
   {
-    labelBn: 'CMS',
-    labelEn: 'CMS Pages',
-    href: 'cms',
+    labelBn: 'নোটিশ',
+    labelEn: 'Notices',
+    href: 'notices',
   },
   {
     labelBn: 'গ্যালারি',
@@ -74,17 +75,22 @@ const menuItems: MenuItem[] = [
   },
   {
     labelBn: 'ডকুমেন্ট',
-    labelEn: 'Documents',
+    labelEn: 'Public Documents',
     href: 'documents',
   },
   {
-    labelBn: 'মিডিয়া',
+    labelBn: 'মিডিয়া',
     labelEn: 'Media',
     href: 'media',
   },
   {
-    labelBn: 'ইউজার ও রোল',
-    labelEn: 'Users & Roles',
+    labelBn: 'CMS পেজ',
+    labelEn: 'CMS Pages',
+    href: 'cms',
+  },
+  {
+    labelBn: 'ব্যবহারকারী',
+    labelEn: 'Users',
     href: 'users',
   },
   {
@@ -160,12 +166,22 @@ export default function AdminLayout({
 
             {/* Logo */}
             <div className="border-b border-gray-800 px-6 py-5">
-              <div className="text-xl font-bold text-emerald-400">
-                Bride Future Foundation
-              </div>
+              <div className="flex items-center gap-3">
+                <SiteLogo
+                  locale={locale}
+                  size="sm"
+                  className="shadow-lg"
+                />
 
-              <div className="mt-1 text-xs text-gray-400">
-                {isBn ? 'অ্যাডমিন প্যানেল' : 'Admin Panel'}
+                <div className="min-w-0">
+                  <div className="truncate text-base font-bold text-emerald-400">
+                    Bright Further Foundation
+                  </div>
+
+                  <div className="mt-1 text-xs text-gray-400">
+                    {isBn ? 'অ্যাডমিন প্যানেল' : 'Admin Panel'}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -214,7 +230,7 @@ export default function AdminLayout({
 
               <button
                 onClick={handleLogout}
-                className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                className="bff-button w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-700 active:scale-95"
               >
                 {isBn ? 'লগআউট' : 'Logout'}
               </button>

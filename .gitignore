@@ -1,0 +1,40 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Laravel
+/backend/vendor/
+/backend/node_modules/
+/backend/storage/*
+!/backend/storage/.gitignore
+/backend/bootstrap/cache/*
+!/backend/bootstrap/cache/.gitignore
+/backend/public/storage
+/backend/.phpunit.result.cache
+
+# Laravel backups / temporary files
+*.bak
+*.bak-*
+*.tmp
+*.swp
+*.swo
+*~
+/backups/
+
+# Frontend / Next.js
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/frontend/.vercel/
+/frontend/tsconfig.tsbuildinfo
+
+# Logs
+*.log

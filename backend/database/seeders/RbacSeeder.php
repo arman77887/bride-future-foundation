@@ -55,6 +55,10 @@ class RbacSeeder extends Seeder
                 'name' => 'Auditor',
                 'slug' => 'auditor',
             ],
+            [
+                'name' => 'Member',
+                'slug' => 'member',
+            ],
         ];
 
         foreach ($roles as $role) {
@@ -146,6 +150,12 @@ class RbacSeeder extends Seeder
             ['name' => 'Delete Documents', 'slug' => 'documents.delete', 'module' => 'documents'],
 
             // Media
+            // Settings
+            ['name' => 'View Settings', 'slug' => 'settings.view', 'module' => 'settings'],
+            ['name' => 'Create Settings', 'slug' => 'settings.create', 'module' => 'settings'],
+            ['name' => 'Update Settings', 'slug' => 'settings.update', 'module' => 'settings'],
+            ['name' => 'Delete Settings', 'slug' => 'settings.delete', 'module' => 'settings'],
+
             ['name' => 'View Media', 'slug' => 'media.view', 'module' => 'media'],
             ['name' => 'Upload Media', 'slug' => 'media.create', 'module' => 'media'],
             ['name' => 'Delete Media', 'slug' => 'media.delete', 'module' => 'media'],

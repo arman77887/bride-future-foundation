@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import NewsletterSubscribe from './NewsletterSubscribe';
+import SiteLogo from './SiteLogo';
 
 export default function Footer({ locale }: { locale?: string }) {
   const currentLocale = locale === 'en' ? 'en' : 'bn';
@@ -66,15 +68,17 @@ export default function Footer({ locale }: { locale?: string }) {
               href={`/${currentLocale}`}
               className="inline-flex items-center gap-3"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-700 text-2xl font-black text-white shadow-lg">
-                B
-              </div>
+              <SiteLogo
+                locale={currentLocale}
+                size="md"
+                className="shadow-lg"
+              />
 
               <div>
                 <div className="text-xl font-black">
                   {isBn
                     ? 'ব্রাইড ফিউচার ফাউন্ডেশন'
-                    : 'Bride Future Foundation'}
+                    : 'Bright Further Foundation'}
                 </div>
 
                 <div className="mt-1 text-xs font-medium text-emerald-400">
@@ -93,10 +97,12 @@ export default function Footer({ locale }: { locale?: string }) {
 
             <Link
               href={`/${currentLocale}/donate`}
-              className="mt-7 inline-flex items-center rounded-xl bg-emerald-700 px-6 py-3 font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-600"
+              className="bff-button mt-7 inline-flex items-center rounded-xl bg-emerald-700 px-6 py-3 font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-600 active:scale-95"
             >
               ❤️ {isBn ? 'সহযোগিতা করুন' : 'Support Us'}
             </Link>
+
+            <NewsletterSubscribe locale={currentLocale} />
           </div>
 
           {/* Quick Links */}
@@ -143,7 +149,7 @@ export default function Footer({ locale }: { locale?: string }) {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-6 text-sm text-gray-500 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
           <p>
-            © {new Date().getFullYear()} Bride Future Foundation.
+            © {new Date().getFullYear()} Bright Further Foundation.
           </p>
 
           <p>

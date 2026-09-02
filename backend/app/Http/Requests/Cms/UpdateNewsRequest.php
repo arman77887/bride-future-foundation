@@ -21,6 +21,7 @@ class UpdateNewsRequest extends FormRequest
             'content_bn' => ['sometimes', 'required', 'string'],
             'content_en' => ['sometimes', 'required', 'string'],
             'status' => ['sometimes', 'required', 'string', 'in:DRAFT,PUBLISHED,ARCHIVED'],
+            'cover_media_id' => ['sometimes', 'nullable', 'uuid', 'exists:media,id'],
         ];
     }
 }

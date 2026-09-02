@@ -1,14 +1,24 @@
 'use client';
 
+import AdminCrud from '@/components/admin/AdminCrud';
+
 export default function VacanciesPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Vacancies</h1>
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <p className="text-gray-600">
-          Vacancy management will appear here.
-        </p>
-      </div>
-    </div>
+    <AdminCrud
+      title="Vacancies"
+      titleBn="চাকরির বিজ্ঞপ্তি ব্যবস্থাপনা"
+      endpoint="/vacancies"
+      updateEnabled={false}
+      deleteEnabled={false}
+      fields={[
+        'title_bn',
+        'title_en',
+        'description_bn',
+        'description_en',
+        'location',
+        'employment_type',
+        'deadline',
+      ]}
+    />
   );
 }

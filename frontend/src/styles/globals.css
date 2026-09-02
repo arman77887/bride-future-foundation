@@ -48,3 +48,295 @@ button {
   background: #047857;
   color: white;
 }
+
+/* =========================================================
+   BFF GLOBAL ANIMATION SYSTEM
+   ========================================================= */
+
+@keyframes bff-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bff-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bff-fade-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bff-fade-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bff-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bff-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bff-page {
+  animation: bff-fade-up 0.65s ease-out both;
+}
+
+.bff-fade {
+  animation: bff-fade-in 0.7s ease-out both;
+}
+
+.bff-reveal {
+  animation: bff-fade-up 0.7s ease-out both;
+}
+
+.bff-reveal-left {
+  animation: bff-fade-left 0.7s ease-out both;
+}
+
+.bff-reveal-right {
+  animation: bff-fade-right 0.7s ease-out both;
+}
+
+.bff-scale {
+  animation: bff-scale-in 0.65s ease-out both;
+}
+
+/* Stagger helpers */
+.bff-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.bff-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.bff-delay-3 {
+  animation-delay: 0.24s;
+}
+
+.bff-delay-4 {
+  animation-delay: 0.32s;
+}
+
+.bff-delay-5 {
+  animation-delay: 0.40s;
+}
+
+.bff-delay-6 {
+  animation-delay: 0.48s;
+}
+
+/* Cards */
+.bff-card {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.bff-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Images */
+.bff-image {
+  transition:
+    transform 0.35s ease,
+    filter 0.35s ease;
+}
+
+.bff-image:hover {
+  transform: scale(1.035);
+}
+
+/* Buttons and interactive controls */
+.bff-button {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.bff-button:hover {
+  transform: translateY(-2px);
+}
+
+.bff-button:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.bff-button:disabled {
+  cursor: not-allowed;
+}
+
+/* Navigation links */
+.bff-nav-link {
+  position: relative;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.bff-nav-link:hover {
+  transform: translateY(-1px);
+}
+
+.bff-nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+}
+
+.bff-nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =========================================================
+   BFF PUBLIC PAGE TRANSITION
+   ========================================================= */
+
+@keyframes bff-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bff-public-main {
+  animation: bff-page-enter 0.55s ease-out both;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bff-public-main {
+    animation: none;
+  }
+}
+
+/* =========================================================
+   BFF NAVBAR INTERACTIONS
+   ========================================================= */
+
+@keyframes bff-dropdown-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bff-overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bff-drawer-enter {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.bff-dropdown {
+  transform-origin: top left;
+  animation: bff-dropdown-enter 0.2s ease-out both;
+}
+
+.bff-mobile-overlay {
+  animation: bff-overlay-enter 0.2s ease-out both;
+}
+
+.bff-mobile-drawer {
+  animation: bff-drawer-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bff-mobile-submenu {
+  animation: bff-fade-up 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bff-dropdown,
+  .bff-mobile-overlay,
+  .bff-mobile-drawer,
+  .bff-mobile-submenu {
+    animation: none;
+  }
+}

@@ -20,6 +20,7 @@ class StoreNoticeRequest extends FormRequest
             'content_en' => ['required', 'string'],
             'expires_at' => ['nullable', 'date'],
             'status' => ['required', 'string', 'in:DRAFT,PUBLISHED,ARCHIVED'],
+            'cover_media_id' => ['nullable', 'uuid', 'exists:media,id'],
         ];
     }
 }

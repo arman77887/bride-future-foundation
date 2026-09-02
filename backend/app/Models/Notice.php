@@ -17,9 +17,15 @@ class Notice extends Model
         'content_en',
         'expires_at',
         'status',
+        'cover_media_id',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
     ];
+    public function coverMedia()
+    {
+        return $this->belongsTo(Media::class, 'cover_media_id');
+    }
+
 }

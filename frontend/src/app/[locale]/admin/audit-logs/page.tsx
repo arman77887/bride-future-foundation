@@ -3,10 +3,18 @@
 export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <p className="text-gray-600">
-          Audit logs will appear here.
+      <h1 className="text-3xl font-bold text-gray-900">
+        Audit Logs
+      </h1>
+
+      <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-6">
+        <h2 className="text-lg font-semibold text-yellow-800">
+          Backend API Required
+        </h2>
+
+        <p className="mt-2 text-sm text-yellow-700">
+          Audit log UI is ready to be connected, but the backend
+          currently has no /api/v1/audit-logs endpoint.
         </p>
       </div>
     </div>
