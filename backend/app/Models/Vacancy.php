@@ -21,11 +21,15 @@ class Vacancy extends Model
         'requirements',
         'deadline',
         'status',
+        'is_active',
+        'application_limit',
         'created_by',
     ];
 
     protected $casts = [
         'required_count' => 'integer',
+        'is_active' => 'boolean',
+        'application_limit' => 'integer',
         'deadline' => 'datetime',
     ];
 

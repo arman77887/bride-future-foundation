@@ -2,6 +2,13 @@
 
 return [
     'contact_recipient' => env('CONTACT_MESSAGE_EMAIL', 'tha.crypticx.official@gmail.com'),
+    'notification_recipients' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', env(
+            'MAIL_NOTIFICATION_RECIPIENTS',
+            'tha.crypticx.official@gmail.com,dyppomahadi2000@gmail.com'
+        ))
+    ))),
     'default' => env('MAIL_MAILER', 'smtp'),
     'mailers' => [
         'smtp' => [
@@ -24,6 +31,6 @@ return [
     ],
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'no-reply@bff.org.bd'),
-        'name' => env('MAIL_FROM_NAME', 'Bride Future Foundation'),
+        'name' => env('MAIL_FROM_NAME', 'Bright Future Foundation'),
     ],
 ];

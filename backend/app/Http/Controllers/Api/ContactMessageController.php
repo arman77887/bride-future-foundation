@@ -45,10 +45,13 @@ class ContactMessageController extends Controller
             'status' => 'new',
         ]);
 
-        $setting = SystemSetting::where('key', 'contact_message_email')->first();
+        $recipient = trim((string) SystemSetting::where('key', 'contact_email')->value('value'));
 
-        $recipient = $setting?->value
-            ?: config('mail.contact_recipient', 'tha.crypticx.official@gmail.com');
+        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'message' => 'Contact receiving email is not configured correctly.',
+            ], 500);
+        }
 
         Mail::to($recipient)->send(
             new ContactMessageMail($contactMessage)

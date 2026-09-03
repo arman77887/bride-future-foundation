@@ -1,7 +1,17 @@
-'use client';
-
-import React from 'react';
+import type { Metadata } from 'next';
 import { Login } from '@/components/pages/Login';
+
+export const metadata: Metadata = {
+  title: 'Sign In',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+};
 
 export default function LoginPage() {
   return (

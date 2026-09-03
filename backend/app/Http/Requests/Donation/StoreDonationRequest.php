@@ -14,13 +14,54 @@ class StoreDonationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'donor_name' => ['nullable', 'string', 'max:255'],
-            'donor_email' => ['nullable', 'email', 'max:255'],
-            'donor_phone' => ['nullable', 'string', 'max:20'],
-            'amount' => ['required', 'numeric', 'min:1'],
-            'currency' => ['required', 'string', 'size:3'],
-            'payment_gateway' => ['required', 'string'],
-            'transaction_id' => ['required', 'string', 'unique:donations,transaction_id'],
+            'donation_method_id' => [
+                'required',
+                'uuid',
+                'exists:donation_methods,id',
+            ],
+            'donor_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'donor_email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+            'donor_phone' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
+            'amount' => [
+                'required',
+                'numeric',
+                'min:1',
+                'max:999999999999.99',
+            ],
+            'currency' => [
+                'required',
+                'string',
+                'in:BDT,USD',
+            ],
+            'transaction_id' => [
+                'required',
+                'string',
+                'max:150',
+                'unique:donations,transaction_id',
+            ],
+            'sender_phone' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
+            'evidence' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:5120',
+            ],
         ];
     }
 }

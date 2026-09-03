@@ -15,21 +15,30 @@ interface DonationMethod {
   display_order: number;
 }
 
+interface FormData {
+  donor_name: string;
+  donor_email: string;
+  donor_phone: string;
+  amount: string;
+  currency: 'BDT' | 'USD';
+  donation_method_id: string;
+  transaction_id: string;
+}
+
 export default function DonatePage() {
   const params = useParams();
-
   const locale = params?.locale === 'en' ? 'en' : 'bn';
   const isBn = locale === 'bn';
 
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'https://bridefuturefoundation.duckdns.org/api/v1';
+    'https://brightfuturefoundation.duckdns.org/api/v1';
 
   const [methods, setMethods] = useState<DonationMethod[]>([]);
   const [methodsLoading, setMethodsLoading] = useState(true);
   const [methodsError, setMethodsError] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     donor_name: '',
     donor_email: '',
     donor_phone: '',
@@ -39,6 +48,7 @@ export default function DonatePage() {
     transaction_id: '',
   });
 
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -60,7 +70,12 @@ export default function DonatePage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || 'Unable to load payment methods');
+          throw new Error(
+            data.message ||
+              (isBn
+                ? 'অনুদান মাধ্যম লোড করা যায়নি।'
+                : 'Unable to load donation methods.')
+          );
         }
 
         const activeMethods = (data.data || [])
@@ -83,8 +98,8 @@ export default function DonatePage() {
         setMethodsError(
           error?.message ||
             (isBn
-              ? 'পেমেন্ট মাধ্যম লোড করা যায়নি।'
-              : 'Unable to load payment methods.')
+              ? 'অনুদান মাধ্যম লোড করা যায়নি।'
+              : 'Unable to load donation methods.')
         );
       } finally {
         setMethodsLoading(false);
@@ -108,37 +123,54 @@ export default function DonatePage() {
     if (!formData.donation_method_id) {
       setErrorMessage(
         isBn
-          ? 'অনুগ্রহ করে একটি পেমেন্ট মাধ্যম নির্বাচন করুন।'
-          : 'Please select a payment method.'
+          ? 'অনুগ্রহ করে একটি অনুদান মাধ্যম নির্বাচন করুন।'
+          : 'Please select a donation method.'
       );
       setLoading(false);
       return;
     }
 
     try {
+      const payload = new FormData();
+
+      payload.append('donor_name', formData.donor_name);
+      payload.append('donor_email', formData.donor_email);
+      payload.append('donor_phone', formData.donor_phone);
+      payload.append('amount', formData.amount);
+      payload.append('currency', formData.currency);
+      payload.append('donation_method_id', formData.donation_method_id);
+      payload.append('transaction_id', formData.transaction_id);
+
+      if (evidenceFile) {
+        payload.append('evidence', evidenceFile);
+      }
+
       const response = await fetch(`${apiBase}/donations`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Accept: 'application/json',
           'X-Locale': locale,
         },
-        body: JSON.stringify({
-          donor_name: formData.donor_name,
-          donor_email: formData.donor_email,
-          donor_phone: formData.donor_phone,
-          amount: Number(formData.amount),
-          currency: formData.currency,
-          donation_method_id: formData.donation_method_id,
-          payment_gateway: selectedMethod?.type || 'MANUAL',
-          transaction_id: formData.transaction_id,
-        }),
+        body: payload,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Something went wrong');
+        const validationMessage =
+          data?.errors &&
+          Object.values(data.errors)
+            .flat()
+            .filter(Boolean)
+            .join(' ');
+
+        throw new Error(
+          validationMessage ||
+            data.message ||
+            (isBn
+              ? 'অনুদান জমা দেওয়া যায়নি।'
+              : 'Donation submission failed.')
+        );
       }
 
       setSuccessMessage(
@@ -156,6 +188,16 @@ export default function DonatePage() {
         donation_method_id: methods[0]?.id || '',
         transaction_id: '',
       });
+
+      setEvidenceFile(null);
+
+      const fileInput = document.getElementById(
+        'donation-evidence'
+      ) as HTMLInputElement | null;
+
+      if (fileInput) {
+        fileInput.value = '';
+      }
     } catch (error: any) {
       console.error('Donation submission error:', error);
 
@@ -171,7 +213,6 @@ export default function DonatePage() {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow border border-gray-200">
-
         <h2 className="text-2xl font-bold text-center text-emerald-800 mb-6">
           {isBn ? 'অনুদান ফর্ম' : 'Donation Form'}
         </h2>
@@ -195,7 +236,6 @@ export default function DonatePage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -256,10 +296,39 @@ export default function DonatePage() {
             />
           </div>
 
+          {/* Currency */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {isBn ? 'মুদ্রা' : 'Currency'}
+            </label>
+
+            <select
+              required
+              value={formData.currency}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  currency: e.target.value as 'BDT' | 'USD',
+                })
+              }
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            >
+              <option value="BDT">
+                {isBn ? 'বাংলাদেশি টাকা (BDT)' : 'Bangladeshi Taka (BDT)'}
+              </option>
+
+              <option value="USD">
+                {isBn ? 'মার্কিন ডলার (USD)' : 'US Dollar (USD)'}
+              </option>
+            </select>
+          </div>
+
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              {isBn ? 'পরিমাণ (টাকা)' : 'Amount'}
+              {isBn
+                ? `পরিমাণ (${formData.currency})`
+                : `Amount (${formData.currency})`}
             </label>
 
             <input
@@ -278,23 +347,23 @@ export default function DonatePage() {
             />
           </div>
 
-          {/* Payment Method */}
+          {/* Donation Method */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              {isBn ? 'পেমেন্ট মাধ্যম' : 'Payment Method'}
+              {isBn ? 'অনুদান মাধ্যম' : 'Donation Method'}
             </label>
 
             {methodsLoading ? (
               <div className="mt-1 p-3 rounded-md bg-gray-50 border text-sm text-gray-500">
                 {isBn
-                  ? 'পেমেন্ট মাধ্যম লোড হচ্ছে...'
-                  : 'Loading payment methods...'}
+                  ? 'অনুদান মাধ্যম লোড হচ্ছে...'
+                  : 'Loading donation methods...'}
               </div>
             ) : methods.length === 0 ? (
               <div className="mt-1 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-sm text-yellow-700">
                 {isBn
-                  ? 'কোনো পেমেন্ট মাধ্যম বর্তমানে সক্রিয় নেই।'
-                  : 'No payment methods are currently active.'}
+                  ? 'কোনো অনুদান মাধ্যম বর্তমানে সক্রিয় নেই।'
+                  : 'No donation methods are currently active.'}
               </div>
             ) : (
               <select
@@ -321,20 +390,16 @@ export default function DonatePage() {
           {/* Payment Information */}
           {selectedMethod && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-
               <h3 className="font-bold text-emerald-800 mb-3">
-                {isBn ? 'পেমেন্ট তথ্য' : 'Payment Information'}
+                {isBn ? 'অনুদান প্রদানের তথ্য' : 'Donation Payment Information'}
               </h3>
 
-              <div className="space-y-2 text-sm">
-
+              <div className="space-y-3 text-sm">
                 <div>
                   <span className="font-semibold">
                     {isBn ? 'মাধ্যম:' : 'Method:'}
                   </span>{' '}
-                  {isBn
-                    ? selectedMethod.name_bn
-                    : selectedMethod.name_en}
+                  {isBn ? selectedMethod.name_bn : selectedMethod.name_en}
                 </div>
 
                 <div>
@@ -355,14 +420,13 @@ export default function DonatePage() {
                       {isBn ? 'নির্দেশনা:' : 'Instructions:'}
                     </span>
 
-                    <p className="mt-1 text-gray-700">
+                    <p className="mt-1 text-gray-700 whitespace-pre-line">
                       {isBn
                         ? selectedMethod.instructions_bn
                         : selectedMethod.instructions_en}
                     </p>
                   </div>
                 )}
-
               </div>
             </div>
           )}
@@ -392,6 +456,32 @@ export default function DonatePage() {
             />
           </div>
 
+          {/* Optional Screenshot */}
+          <div>
+            <label
+              htmlFor="donation-evidence"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {isBn
+                ? 'পেমেন্টের স্ক্রিনশট (ঐচ্ছিক)'
+                : 'Payment Screenshot (Optional)'}
+            </label>
+
+            <input
+              id="donation-evidence"
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+              onChange={(e) => setEvidenceFile(e.target.files?.[0] || null)}
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm"
+            />
+
+            <p className="mt-1 text-xs text-gray-500">
+              {isBn
+                ? 'JPG, PNG অথবা PDF • সর্বোচ্চ 5 MB'
+                : 'JPG, PNG or PDF • Maximum 5 MB'}
+            </p>
+          </div>
+
           {/* Submit */}
           <button
             type="submit"
@@ -406,7 +496,6 @@ export default function DonatePage() {
                 ? 'অনুদান জমা দিন'
                 : 'Submit Donation'}
           </button>
-
         </form>
       </div>
     </div>

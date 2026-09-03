@@ -33,6 +33,12 @@ interface HomepageSettings {
   cover_image_url?: string | null;
 }
 
+interface PublicStats {
+  subscribers: number;
+  registered_users: number;
+  donations: number;
+}
+
 interface SystemSetting {
   key: string;
   value?: string | null;
@@ -191,6 +197,30 @@ async function getHomepageSettings(): Promise<HomepageSettings> {
   }
 }
 
+async function getPublicStats(): Promise<PublicStats> {
+  try {
+    const response = await api.get('/public/stats', {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+
+    return {
+      subscribers: Number(response?.data?.data?.subscribers ?? 0),
+      registered_users: Number(response?.data?.data?.registered_users ?? 0),
+      donations: Number(response?.data?.data?.donations ?? 0),
+    };
+  } catch (error) {
+    console.error('Public stats API error:', error);
+
+    return {
+      subscribers: 0,
+      registered_users: 0,
+      donations: 0,
+    };
+  }
+}
+
 async function getHomepageContent(): Promise<HomepageContent> {
   try {
     const [projectsRes, newsRes, noticesRes] = await Promise.all([
@@ -257,11 +287,13 @@ export default async function HomePage({
   params: { locale: string };
 }) {
   const locale: Locale = params.locale === 'en' ? 'en' : 'bn';
-  const [cms, homepageContent, homepageSettings] = await Promise.all([
-    getHomepage(),
-    getHomepageContent(),
-    getHomepageSettings(),
-  ]);
+  const [cms, homepageContent, homepageSettings, publicStats] =
+    await Promise.all([
+      getHomepage(),
+      getHomepageContent(),
+      getHomepageSettings(),
+      getPublicStats(),
+    ]);
 
   const projectItems = homepageContent.projects.slice(
     0,
@@ -477,7 +509,7 @@ export default async function HomePage({
                   locale,
                   intro?.title_bn,
                   intro?.title_en,
-                  'For a More Caring and Responsible Society'
+                  'For A More Caring and Responsible Society'
                 )}
               </h2>
             </div>
@@ -509,8 +541,29 @@ export default async function HomePage({
       <section className="bg-emerald-50">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
           <div className="grid grid-cols-2 divide-x divide-emerald-200 md:grid-cols-4">
-            {(impact?.items ?? []).map((item) => (
-              <div key={item.number} className="px-4 text-center md:px-8">
+            {[
+              {
+                number: publicStats.subscribers,
+                bn: 'সাবস্ক্রাইবার',
+                en: 'Subscribers',
+              },
+              {
+                number: publicStats.registered_users,
+                bn: 'নিবন্ধিত ব্যবহারকারী',
+                en: 'Registered Users',
+              },
+              {
+                number: publicStats.donations,
+                bn: 'অনুদান',
+                en: 'Donations',
+              },
+              {
+                number: impact?.items?.[3]?.number ?? '—',
+                bn: 'আমাদের প্রভাব',
+                en: 'Our Impact',
+              },
+            ].map((item, index) => (
+              <div key={`${item.en}-${index}`} className="px-4 text-center md:px-8">
                 <div className="text-3xl font-black text-emerald-800 sm:text-4xl">
                   {item.number}
                 </div>

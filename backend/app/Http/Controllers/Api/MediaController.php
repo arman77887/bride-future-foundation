@@ -88,7 +88,7 @@ class MediaController extends Controller
                 'sometimes',
                 'file',
                 'mimes:jpg,jpeg,png,pdf,docx',
-                'max:10240',
+                'max:20480',
             ],
             'filename' => [
                 'sometimes',

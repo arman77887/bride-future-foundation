@@ -15,6 +15,9 @@ interface DashboardStats {
     projects: number;
     vacancies: number;
     documents: number;
+    users: number;
+    subscribers: number;
+    active_subscribers: number;
   };
   recent: {
     donations: unknown[];
@@ -109,6 +112,18 @@ export default function AdminDashboardPage() {
         {
           title: isBn ? 'মোট ডকুমেন্ট' : 'Total Documents',
           value: stats.overview.documents,
+        },
+        {
+          title: isBn ? 'মোট ইউজার' : 'Total Users',
+          value: stats.overview.users,
+        },
+        {
+          title: isBn ? 'মোট সাবস্ক্রাইবার' : 'Total Subscribers',
+          value: stats.overview.subscribers,
+        },
+        {
+          title: isBn ? 'সক্রিয় সাবস্ক্রাইবার' : 'Active Subscribers',
+          value: stats.overview.active_subscribers,
         },
       ]
     : [];

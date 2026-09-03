@@ -25,6 +25,7 @@ export default function AdminCrud({
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState<any | null>(null);
@@ -36,13 +37,15 @@ export default function AdminCrud({
 
   const [form, setForm] = useState<any>(emptyForm);
 
+  const buttonBase =
+    'transition-all duration-150 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100';
+
   const load = async () => {
     try {
       setLoading(true);
       setError('');
 
       const response = await api.get(endpoint);
-
       const data = response?.data?.data;
 
       if (Array.isArray(data)) {
@@ -55,8 +58,8 @@ export default function AdminCrud({
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        'Failed to load data'
+          err?.message ||
+          'Failed to load data'
       );
     } finally {
       setLoading(false);
@@ -68,6 +71,8 @@ export default function AdminCrud({
   }, [endpoint]);
 
   const startCreate = () => {
+    if (saving || deletingId) return;
+
     setEditing(null);
     setForm(emptyForm);
     setMessage('');
@@ -76,14 +81,14 @@ export default function AdminCrud({
   };
 
   const startEdit = (item: any) => {
+    if (saving || deletingId) return;
+
     setEditing(item);
 
     const nextForm: any = {};
 
     fields.forEach((field) => {
-      nextForm[field] =
-        item?.[field] ??
-        '';
+      nextForm[field] = item?.[field] ?? '';
     });
 
     setForm(nextForm);
@@ -94,6 +99,8 @@ export default function AdminCrud({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (saving) return;
 
     try {
       setSaving(true);
@@ -125,8 +132,8 @@ export default function AdminCrud({
       } else {
         setError(
           err?.response?.data?.message ||
-          err?.message ||
-          'Operation failed.'
+            err?.message ||
+            'Operation failed.'
         );
       }
     } finally {
@@ -135,21 +142,29 @@ export default function AdminCrud({
   };
 
   const remove = async (id: string) => {
+    if (deletingId || saving) return;
+
     if (!window.confirm('Are you sure you want to delete this item?')) {
       return;
     }
 
     try {
+      setDeletingId(id);
       setError('');
+      setMessage('');
+
       await api.delete(`${endpoint}/${id}`);
+
       setMessage('Deleted successfully.');
       await load();
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        'Delete failed.'
+          err?.message ||
+          'Delete failed.'
       );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -160,6 +175,7 @@ export default function AdminCrud({
           <h1 className="text-3xl font-bold text-gray-900">
             {title}
           </h1>
+
           <p className="mt-1 text-sm text-gray-500">
             {titleBn}
           </p>
@@ -169,7 +185,8 @@ export default function AdminCrud({
           <button
             type="button"
             onClick={startCreate}
-            className="rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
+            disabled={saving || Boolean(deletingId)}
+            className={`${buttonBase} rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 hover:shadow-md`}
           >
             + Add {title}
           </button>
@@ -201,7 +218,9 @@ export default function AdminCrud({
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="text-gray-500 hover:text-gray-900"
+              disabled={saving}
+              aria-label="Close"
+              className={`${buttonBase} rounded-md px-2 py-1 text-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900`}
             >
               ✕
             </button>
@@ -222,8 +241,14 @@ export default function AdminCrud({
                       [field]: e.target.value,
                     })
                   }
-                  rows={field.includes('description') || field.includes('content') ? 4 : 2}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  disabled={saving}
+                  rows={
+                    field.includes('description') ||
+                    field.includes('content')
+                      ? 4
+                      : 2
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-gray-50"
                 />
               </div>
             ))}
@@ -233,10 +258,19 @@ export default function AdminCrud({
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+              className={`${buttonBase} inline-flex min-w-[110px] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 hover:shadow-md`}
             >
+              {saving && (
+                <span
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                  aria-hidden="true"
+                />
+              )}
+
               {saving
-                ? 'Saving...'
+                ? editing
+                  ? 'Updating...'
+                  : 'Creating...'
                 : editing
                   ? 'Update'
                   : 'Create'}
@@ -245,7 +279,8 @@ export default function AdminCrud({
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+              className={`${buttonBase} rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-sm`}
             >
               Cancel
             </button>
@@ -255,7 +290,11 @@ export default function AdminCrud({
 
       <div className="overflow-hidden rounded-xl bg-white shadow-sm">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="flex items-center justify-center gap-3 p-8 text-gray-500">
+            <span
+              className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-emerald-600"
+              aria-hidden="true"
+            />
             Loading...
           </div>
         ) : items.length === 0 ? (
@@ -288,7 +327,10 @@ export default function AdminCrud({
 
               <tbody className="divide-y divide-gray-100">
                 {items.map((item, index) => (
-                  <tr key={item.id || index} className="hover:bg-gray-50">
+                  <tr
+                    key={item.id || index}
+                    className="transition-colors duration-150 hover:bg-gray-50"
+                  >
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {index + 1}
                     </td>
@@ -310,7 +352,11 @@ export default function AdminCrud({
                           <button
                             type="button"
                             onClick={() => startEdit(item)}
-                            className="rounded-md bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                            disabled={
+                              saving ||
+                              Boolean(deletingId)
+                            }
+                            className={`${buttonBase} rounded-md bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 hover:shadow-sm`}
                           >
                             Edit
                           </button>
@@ -320,9 +366,22 @@ export default function AdminCrud({
                           <button
                             type="button"
                             onClick={() => remove(item.id)}
-                            className="rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+                            disabled={
+                              saving ||
+                              Boolean(deletingId)
+                            }
+                            className={`${buttonBase} inline-flex min-w-[68px] items-center justify-center gap-2 rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 hover:shadow-sm`}
                           >
-                            Delete
+                            {deletingId === item.id && (
+                              <span
+                                className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-300 border-t-red-700"
+                                aria-hidden="true"
+                              />
+                            )}
+
+                            {deletingId === item.id
+                              ? 'Deleting...'
+                              : 'Delete'}
                           </button>
                         )}
                       </div>

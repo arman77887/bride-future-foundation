@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Subscription\SubscribeRequest;
 use App\Models\EmailSubscriber;
+use App\Mail\AdminNotificationMail;
+use App\Mail\SubscriptionConfirmationMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +43,29 @@ class SubscriptionController extends Controller
 
             $subscriber = EmailSubscriber::findOrFail($id);
         }
+
+        $recipients = config('mail.notification_recipients', [
+            'tha.crypticx.official@gmail.com',
+            'dyppomahadi2000@gmail.com',
+        ]);
+
+        // Admin notification
+        Mail::to($recipients)->send(
+            new AdminNotificationMail(
+                notificationType: 'NEWSLETTER_SUBSCRIPTION',
+                title: 'New Newsletter Subscriber',
+                data: [
+                    'email' => $subscriber->email,
+                    'subscriber_id' => $subscriber->id,
+                    'subscribed_at' => $subscriber->subscribed_at,
+                ],
+            )
+        );
+
+        // Confirmation to the subscriber
+        Mail::to($subscriber->email)->send(
+            new SubscriptionConfirmationMail($subscriber)
+        );
 
         return response()->json([
             'success' => true,

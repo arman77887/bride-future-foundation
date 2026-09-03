@@ -94,16 +94,6 @@ export default function Navbar({
       href: `/${currentLocale}/about`,
     },
     {
-      bn: 'কর্মকর্তাবৃন্দ',
-      en: 'Our Team',
-      href: `/${currentLocale}/officers`,
-    },
-    {
-      bn: 'চাকরির সুযোগ',
-      en: 'Careers',
-      href: `/${currentLocale}/vacancies`,
-    },
-    {
       bn: 'গ্যালারি',
       en: 'Gallery',
       href: `/${currentLocale}/gallery`,

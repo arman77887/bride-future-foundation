@@ -57,6 +57,28 @@ async function getContactPage() {
   }
 }
 
+async function getContactSettings() {
+  try {
+    const response = await api.get('settings?group=contact', {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+
+    const data = response.data?.data;
+    const settings = Array.isArray(data) ? data : [];
+
+    return Object.fromEntries(
+      settings.map((item: { key?: string; value?: string }) => [
+        item.key || '',
+        String(item.value || '').trim(),
+      ]),
+    ) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
 export default async function ContactPage({
   params,
 }: {
@@ -66,6 +88,7 @@ export default async function ContactPage({
   const isBn = locale === 'bn';
 
   const cms = await getContactPage();
+  const contactSettings = await getContactSettings();
 
   const metadata = cms?.metadata ?? {};
   const data: ContactData =
@@ -114,7 +137,10 @@ export default async function ContactPage({
               {address.title || (isBn ? 'ঠিকানা' : 'Address')}
             </h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">
-              {address.value ||
+              {contactSettings[
+                isBn ? 'contact.address_bn' : 'contact.address_en'
+              ] ||
+                address.value ||
                 (isBn ? 'ঠিকানা এখানে যুক্ত করুন' : 'Add your address here')}
             </p>
           </div>
@@ -125,7 +151,7 @@ export default async function ContactPage({
               {phone.title || (isBn ? 'ফোন' : 'Phone')}
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              {phone.value || (isBn ? 'ফোন নম্বর যুক্ত করুন' : 'Add phone number')}
+              {contactSettings['contact.phone'] || phone.value || (isBn ? 'ফোন নম্বর যুক্ত করুন' : 'Add phone number')}
             </p>
           </div>
 
@@ -135,7 +161,7 @@ export default async function ContactPage({
               {email.title || (isBn ? 'ইমেইল' : 'Email')}
             </h2>
             <p className="mt-3 break-all text-sm leading-7 text-slate-600">
-              {email.value || 'info@bff.org.bd'}
+              {contactSettings['contact_email'] || email.value || (isBn ? 'ইমেইল যুক্ত করুন' : 'Add email address')}
             </p>
           </div>
 
@@ -146,7 +172,12 @@ export default async function ContactPage({
                 (isBn ? 'অফিস সময়' : 'Office Hours')}
             </h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600">
-              {officeHours.value ||
+              {contactSettings[
+                isBn
+                  ? 'contact.office_hours_bn'
+                  : 'contact.office_hours_en'
+              ] ||
+                officeHours.value ||
                 (isBn
                   ? 'অফিস সময় এখানে যুক্ত করুন'
                   : 'Add office hours here')}
@@ -191,9 +222,9 @@ export default async function ContactPage({
             </h2>
 
             <div className="mt-6 flex min-h-[420px] items-center justify-center rounded-2xl bg-slate-100 text-center">
-              {map.url ? (
+              {contactSettings['contact.google_maps_url'] || map.url ? (
                 <a
-                  href={map.url}
+                  href={contactSettings['contact.google_maps_url'] || map.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white"

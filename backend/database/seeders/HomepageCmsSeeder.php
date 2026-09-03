@@ -79,7 +79,7 @@ class HomepageCmsSeeder extends Seeder
                         'label_en' => 'Who We Are',
 
                         'title_bn' => 'একটি দায়িত্বশীল ও মানবিক সমাজের জন্য',
-                        'title_en' => 'For a More Caring and Responsible Society',
+                        'title_en' => 'For A More Caring and Responsible Society',
 
                         'content_bn' =>
                             'ব্রাইড ফিউচার ফাউন্ডেশন একটি মানবিক ও সামাজিক কল্যাণমূলক উদ্যোগ। মানুষের প্রয়োজন, সামাজিক দায়িত্ব এবং ভবিষ্যৎ প্রজন্মের সম্ভাবনাকে গুরুত্ব দিয়ে আমরা কার্যক্রম পরিচালনা করতে চাই।',

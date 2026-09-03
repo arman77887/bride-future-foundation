@@ -66,8 +66,8 @@ export default function MediaPicker({
       setUploading(true);
       setError('');
 
-      const maxSize = mediaType === 'logo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
-      const maxSizeLabel = mediaType === 'logo' ? '2 MB' : '5 MB';
+      const maxSize = 20 * 1024 * 1024;
+      const maxSizeLabel = '20 MB';
 
       if (!['image/jpeg', 'image/png'].includes(file.type)) {
         throw new Error('Only JPG, JPEG or PNG images are allowed.');
@@ -193,8 +193,8 @@ export default function MediaPicker({
         <div className="mb-4">
           <p className="mb-2 text-xs text-gray-500">
             {mediaType === 'logo'
-              ? 'Recommended: 512×512 px • 1:1 • JPG/PNG • Max 2 MB'
-              : 'Recommended: 1920×1080 px • 16:9 • JPG/PNG • Max 5 MB'}
+              ? 'Recommended: 512×512 px • 1:1 • JPG/PNG • Max 20 MB'
+              : 'Recommended: 1920×1080 px • 16:9 • JPG/PNG • Max 20 MB'}
           </p>
 
           <label

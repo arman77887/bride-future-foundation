@@ -23,6 +23,21 @@ export default function SettingsPage() {
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [contactAddressBn, setContactAddressBn] = useState('');
+  const [contactAddressEn, setContactAddressEn] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactOfficeHoursBn, setContactOfficeHoursBn] = useState('');
+  const [contactOfficeHoursEn, setContactOfficeHoursEn] = useState('');
+  const [contactMapUrl, setContactMapUrl] = useState('');
+
+  const [contactAddressBnSettingId, setContactAddressBnSettingId] = useState<string | null>(null);
+  const [contactAddressEnSettingId, setContactAddressEnSettingId] = useState<string | null>(null);
+  const [contactPhoneSettingId, setContactPhoneSettingId] = useState<string | null>(null);
+  const [contactEmailSettingId, setContactEmailSettingId] = useState<string | null>(null);
+  const [contactOfficeHoursBnSettingId, setContactOfficeHoursBnSettingId] = useState<string | null>(null);
+  const [contactOfficeHoursEnSettingId, setContactOfficeHoursEnSettingId] = useState<string | null>(null);
+  const [contactMapUrlSettingId, setContactMapUrlSettingId] = useState<string | null>(null);
 
   const [siteNameBnSettingId, setSiteNameBnSettingId] = useState<string | null>(null);
   const [siteNameEnSettingId, setSiteNameEnSettingId] = useState<string | null>(null);
@@ -47,6 +62,28 @@ export default function SettingsPage() {
         : Array.isArray(data?.data)
           ? data.data
           : [];
+
+      const contactAddressBnSetting = settings.find(
+        (item) => item.key === 'contact.address_bn',
+      );
+      const contactAddressEnSetting = settings.find(
+        (item) => item.key === 'contact.address_en',
+      );
+      const contactPhoneSetting = settings.find(
+        (item) => item.key === 'contact.phone',
+      );
+      const contactEmailSetting = settings.find(
+        (item) => item.key === 'contact_email',
+      );
+      const contactOfficeHoursBnSetting = settings.find(
+        (item) => item.key === 'contact.office_hours_bn',
+      );
+      const contactOfficeHoursEnSetting = settings.find(
+        (item) => item.key === 'contact.office_hours_en',
+      );
+      const contactMapUrlSetting = settings.find(
+        (item) => item.key === 'contact.google_maps_url',
+      );
 
       const siteNameBnSetting = settings.find(
         (item) => item.key === 'site_name_bn',
@@ -76,6 +113,22 @@ export default function SettingsPage() {
 
       setLogoMediaId(logo?.value || null);
       setCoverMediaId(cover?.value || null);
+
+      setContactAddressBn(contactAddressBnSetting?.value || '');
+      setContactAddressEn(contactAddressEnSetting?.value || '');
+      setContactPhone(contactPhoneSetting?.value || '');
+      setContactEmail(contactEmailSetting?.value || '');
+      setContactOfficeHoursBn(contactOfficeHoursBnSetting?.value || '');
+      setContactOfficeHoursEn(contactOfficeHoursEnSetting?.value || '');
+      setContactMapUrl(contactMapUrlSetting?.value || '');
+
+      setContactAddressBnSettingId(contactAddressBnSetting?.id ?? null);
+      setContactAddressEnSettingId(contactAddressEnSetting?.id ?? null);
+      setContactPhoneSettingId(contactPhoneSetting?.id ?? null);
+      setContactEmailSettingId(contactEmailSetting?.id ?? null);
+      setContactOfficeHoursBnSettingId(contactOfficeHoursBnSetting?.id ?? null);
+      setContactOfficeHoursEnSettingId(contactOfficeHoursEnSetting?.id ?? null);
+      setContactMapUrlSettingId(contactMapUrlSetting?.id ?? null);
 
       const apiBase =
         process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -169,6 +222,63 @@ export default function SettingsPage() {
         'media',
         'homepage',
         'Homepage cover photo selected from the Media Library.',
+      );
+
+      await saveSetting(
+        'contact.address_bn',
+        contactAddressBn.trim(),
+        contactAddressBnSettingId,
+        'string',
+        'contact',
+        'Public contact address in Bengali.',
+      );
+      await saveSetting(
+        'contact.address_en',
+        contactAddressEn.trim(),
+        contactAddressEnSettingId,
+        'string',
+        'contact',
+        'Public contact address in English.',
+      );
+      await saveSetting(
+        'contact.phone',
+        contactPhone.trim(),
+        contactPhoneSettingId,
+        'string',
+        'contact',
+        'Public contact phone number.',
+      );
+      await saveSetting(
+        'contact_email',
+        contactEmail.trim(),
+        contactEmailSettingId,
+        'string',
+        'contact',
+        'Email address that receives Contact Form submissions.',
+      );
+      await saveSetting(
+        'contact.office_hours_bn',
+        contactOfficeHoursBn.trim(),
+        contactOfficeHoursBnSettingId,
+        'string',
+        'contact',
+        'Office hours in Bengali.',
+      );
+      await saveSetting(
+        'contact.office_hours_en',
+        contactOfficeHoursEn.trim(),
+        contactOfficeHoursEnSettingId,
+        'string',
+        'contact',
+        'Office hours in English.',
+      );
+      await saveSetting(
+        'contact.google_maps_url',
+        contactMapUrl.trim(),
+        contactMapUrlSettingId,
+        'string',
+        'contact',
+        'Google Maps URL for the public Contact page.',
       );
 
       setMessage('Settings saved successfully.');
@@ -303,6 +413,111 @@ export default function SettingsPage() {
               label="Homepage Cover Photo"
               mediaType="cover"
             />
+          </section>
+
+          <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <div className="mb-6">
+              <h2 className="text-xl font-black text-gray-950">Contact Settings</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Contact page-এর ঠিকানা, ফোন, email, office hours, map এবং Contact Form-এর receiving email পরিচালনা করুন।
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Address (বাংলা)
+                </label>
+                <textarea
+                  value={contactAddressBn}
+                  onChange={(e) => setContactAddressBn(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="বাংলায় ঠিকানা"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Address (English)
+                </label>
+                <textarea
+                  value={contactAddressEn}
+                  onChange={(e) => setContactAddressEn(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="Address in English"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="+880..."
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Contact Form Receiving Email
+                </label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="example@gmail.com"
+                />
+                <p className="mt-1.5 text-xs text-gray-500">
+                  Contact Form-এর message এই email-এ যাবে।
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Office Hours (বাংলা)
+                </label>
+                <input
+                  type="text"
+                  value={contactOfficeHoursBn}
+                  onChange={(e) => setContactOfficeHoursBn(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="রবি–বৃহস্পতি: সকাল ৯টা – বিকেল ৫টা"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Office Hours (English)
+                </label>
+                <input
+                  type="text"
+                  value={contactOfficeHoursEn}
+                  onChange={(e) => setContactOfficeHoursEn(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="Sunday–Thursday: 9:00 AM – 5:00 PM"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-bold text-gray-700">
+                  Google Maps URL
+                </label>
+                <input
+                  type="url"
+                  value={contactMapUrl}
+                  onChange={(e) => setContactMapUrl(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="https://maps.google.com/..."
+                />
+              </div>
+            </div>
           </section>
 
           <div className="flex justify-end">

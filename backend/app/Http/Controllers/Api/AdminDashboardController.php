@@ -12,6 +12,8 @@ use App\Models\Event;
 use App\Models\Project;
 use App\Models\Vacancy;
 use App\Models\PublicDocument;
+use App\Models\User;
+use App\Models\EmailSubscriber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -55,6 +57,9 @@ class AdminDashboardController extends Controller
                     'projects' => Project::count(),
                     'vacancies' => Vacancy::count(),
                     'documents' => PublicDocument::count(),
+                    'users' => User::count(),
+                    'subscribers' => EmailSubscriber::count(),
+                    'active_subscribers' => EmailSubscriber::whereRaw('is_active = TRUE')->count(),
                 ],
 
                 'recent' => [

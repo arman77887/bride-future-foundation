@@ -10,6 +10,8 @@ use App\Http\Resources\DonationVerificationHistoryResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Donation;
 use App\Services\DonationService;
+use App\Mail\AdminNotificationMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -45,7 +47,7 @@ class DonationManagementController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('donor_name', 'like', "%{$search}%")
                   ->orWhere('transaction_id', 'like', "%{$search}%")
-                  ->orWhere('donor_email', 'like', "%{$search}%");
+                  ->orWhere('sender_info', 'like', "%{$search}%");
             });
         }
 
@@ -61,6 +63,27 @@ class DonationManagementController extends Controller
             $evidence,
             $request->ip(),
             $request->userAgent()
+        );
+
+        $recipients = config('mail.notification_recipients', [
+            'tha.crypticx.official@gmail.com',
+            'dyppomahadi2000@gmail.com',
+        ]);
+
+        Mail::to($recipients)->send(
+            new AdminNotificationMail(
+                notificationType: 'DONATION',
+                title: 'New Donation Submitted',
+                data: [
+                    'donor_name' => $donation->donor_name,
+                    'amount' => $donation->amount,
+                    'currency' => $donation->currency_code,
+                    'transaction_id' => $donation->transaction_id,
+                    'sender_info' => $donation->sender_info,
+                    'status' => $donation->status,
+                    'donation_id' => $donation->id,
+                ],
+            )
         );
 
         return response()->json([
@@ -94,8 +117,10 @@ class DonationManagementController extends Controller
         $donation = Donation::findOrFail($id);
         $this->authorize('viewEvidence', $donation);
 
-        $gatewayResponse = $donation->gateway_response ?? [];
-        $path = $gatewayResponse['evidence_path'] ?? null;
+        $path = $donation->screenshot_path;
+        if ($path === 'none') {
+            $path = null;
+        }
 
         if (!$path || !Storage::disk('local')->exists($path)) {
             return response()->json(['message' => 'Evidence file not found'], 404);
@@ -138,18 +163,19 @@ class DonationManagementController extends Controller
 
         $callback = function () {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID', 'Donor Name', 'Email', 'Amount', 'Currency', 'Payment Gateway', 'Transaction ID', 'Status', 'Created At']);
+            fputcsv($file, ['ID', 'Donor Name', 'Amount', 'Currency', 'Donation Method', 'Account Identifier', 'Transaction ID', 'Sender Info', 'Status', 'Created At']);
 
-            Donation::chunk(200, function ($donations) use ($file) {
+            Donation::with('donationMethod')->chunk(200, function ($donations) use ($file) {
                 foreach ($donations as $donation) {
                     fputcsv($file, [
                         $donation->id,
                         $donation->donor_name,
-                        $donation->donor_email,
                         $donation->amount,
-                        $donation->currency,
-                        $donation->payment_gateway,
+                        $donation->currency_code,
+                        $donation->donationMethod?->name_en ?? $donation->donationMethod?->name_bn ?? '-',
+                        $donation->donationMethod?->account_identifier ?? '-',
                         $donation->transaction_id,
+                        $donation->sender_info,
                         $donation->status,
                         $donation->created_at,
                     ]);

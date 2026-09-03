@@ -20,7 +20,13 @@ class DonationMethodController extends Controller
 
     public function store(StoreDonationMethodRequest $request): JsonResponse
     {
-        $method = DonationMethod::create($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('is_active', $data)) {
+            $data['is_active'] = filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $method = DonationMethod::create($data);
         return response()->json([
             'message' => 'Donation method created successfully',
             'data' => new DonationMethodResource($method),

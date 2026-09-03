@@ -6,84 +6,77 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDonationRequest;
 use App\Http\Resources\DonationResource;
 use App\Models\Donation;
+use App\Services\DonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DonationController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
-    {
-        $this->authorize('viewAny', Donation::class);
-
-        $query = Donation::query();
-
-        if ($request->has('status')) {
-            $query->where('status', $request->string('status'));
-        }
-
-        $perPage = $request->integer('per_page', 15);
-        $donations = $query->orderBy('created_at', 'desc')->paginate($perPage);
-
-        return DonationResource::collection($donations);
+    public function __construct(
+        protected DonationService $donationService
+    ) {
     }
 
-    public function store(StoreDonationRequest $request): DonationResource
+    public function store(StoreDonationRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $donation = $this->donationService->submitDonation(
+            $request->validated(),
+            $request->file('evidence'),
+            $request->ip(),
+            $request->userAgent()
+        );
 
-        if ($request->hasFile('evidence')) {
-            $path = $request->file('evidence')->store('donations/evidence', 'private');
-            $validated['evidence_path'] = $path;
-        }
-
-        $validated['status'] = Donation::STATUS_PENDING;
-
-        $donation = DB::transaction(function () use ($validated) {
-            return Donation::create($validated);
-        });
-
-        return new DonationResource($donation);
+        return response()->json([
+            'message' => 'Donation submitted successfully and is pending verification',
+            'data' => new DonationResource($donation->load('donationMethod')),
+        ], 201);
     }
 
-    public function show(Donation $donation): DonationResource
+    public function show(Donation $donation): JsonResponse
     {
-        $this->authorize('view', $donation);
-
-        return new DonationResource($donation);
+        return response()->json([
+            'data' => new DonationResource(
+                $donation->load('donationMethod')
+            ),
+        ]);
     }
 
-    public function updateStatus(Request $request, Donation $donation): DonationResource
-    {
-        $this->authorize('updateStatus', $donation);
-
+    public function transitionStatus(
+        Request $request,
+        Donation $donation
+    ): JsonResponse {
         $validated = $request->validate([
-            'status' => ['required', 'string', 'in:PENDING,UNDER_REVIEW,VERIFIED,REJECTED,REVERSED'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'status' => [
+                'required',
+                'string',
+                'in:' . implode(',', [
+                    Donation::STATUS_UNDER_REVIEW,
+                    Donation::STATUS_VERIFIED,
+                    Donation::STATUS_REJECTED,
+                    Donation::STATUS_REVERSED,
+                ]),
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
         ]);
 
-        DB::transaction(function () use ($donation, $validated) {
-            $donation->update([
-                'status' => $validated['status'],
-                'admin_notes' => $validated['notes'] ?? $donation->admin_notes,
-            ]);
-        });
+        $updatedDonation = $this->donationService->transitionStatus(
+            $donation,
+            $validated['status'],
+            (string) $request->user()->id,
+            $validated['notes'] ?? null,
+            $request->ip(),
+            $request->userAgent()
+        );
 
-        return new DonationResource($donation->fresh());
-    }
-
-    public function downloadEvidence(Donation $donation): JsonResponse|StreamedResponse
-    {
-        $this->authorize('viewEvidence', $donation);
-
-        if (!$donation->evidence_path || !Storage::disk('private')->exists($donation->evidence_path)) {
-            return response()->json(['message' => 'Evidence file not found.'], Response::HTTP_NOT_FOUND);
-        }
-
-        return Storage::disk('private')->download($donation->evidence_path);
+        return response()->json([
+            'message' => 'Donation status updated successfully',
+            'data' => new DonationResource(
+                $updatedDonation->load('donationMethod')
+            ),
+        ]);
     }
 }

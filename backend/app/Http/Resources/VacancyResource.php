@@ -27,6 +27,13 @@ class VacancyResource extends JsonResource
             'deadline' => $this->deadline?->toISOString(),
 
             'status' => $this->status,
+            'is_active' => (bool) $this->is_active,
+            'application_limit' => $this->application_limit,
+            'application_count' => isset($this->applications_count)
+                ? (int) $this->applications_count
+                : ($this->relationLoaded('applications')
+                    ? $this->applications->count()
+                    : 0),
 
             'department' => $this->whenLoaded('department'),
             'position' => $this->whenLoaded('position'),

@@ -25,4 +25,12 @@ class DonationMethod extends Model
         'is_active' => 'boolean',
         'display_order' => 'integer',
     ];
+
+    public function setIsActiveAttribute($value): void
+    {
+        $this->attributes['is_active'] = filter_var(
+            $value,
+            FILTER_VALIDATE_BOOLEAN
+        ) ? 'true' : 'false';
+    }
 }

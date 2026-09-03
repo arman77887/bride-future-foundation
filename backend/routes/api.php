@@ -24,6 +24,9 @@ use App\Http\Controllers\Api\CmsMenuController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AdminAuditLogController;
+use App\Http\Controllers\Api\PublicStatsController;
 
 Route::prefix('v1')->group(function () {
     Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe'])->middleware('throttle:10,1');
@@ -39,6 +42,8 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
     |--------------------------------------------------------------------------
     */
 
+    Route::get('/public/stats', [PublicStatsController::class, 'index']);
+
     Route::post('/auth/register', [AuthController::class, 'register'])
         ->middleware('throttle:5,1');
 
@@ -50,6 +55,60 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
         Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
         Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN - USERS
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/users', [
+            AdminUserController::class,
+            'index'
+        ])->middleware('permission:users.view');
+
+        Route::get('/users/{user}', [
+            AdminUserController::class,
+            'show'
+        ])->middleware('permission:users.view');
+
+        Route::get('/roles', [
+            AdminUserController::class,
+            'roles'
+        ])->middleware('permission:users.view');
+
+        Route::post('/users', [
+            AdminUserController::class,
+            'store'
+        ])->middleware('permission:users.create');
+
+        Route::put('/users/{user}', [
+            AdminUserController::class,
+            'update'
+        ])->middleware('permission:users.update');
+
+        Route::delete('/users/{user}', [
+            AdminUserController::class,
+            'destroy'
+        ])->middleware('permission:users.delete');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN - AUDIT LOGS
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/audit-logs', [
+            AdminAuditLogController::class,
+            'index'
+        ])->middleware('permission:audit.view');
+
+        Route::get('/audit-logs/filters', [
+            AdminAuditLogController::class,
+            'filters'
+        ])->middleware('permission:audit.view');
+
 
         /*
         |--------------------------------------------------------------------------
@@ -260,10 +319,30 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
         | Vacancies
         */
 
+        Route::get('/admin/vacancies', [
+            VacancyController::class,
+            'adminIndex'
+        ])->middleware('permission:vacancies.view');
+
+        Route::get('/admin/vacancies/options', [
+            VacancyController::class,
+            'options'
+        ])->middleware('permission:vacancies.view');
+
         Route::post('/vacancies', [
             VacancyController::class,
             'store'
         ])->middleware('permission:vacancies.create');
+
+        Route::put('/vacancies/{id}', [
+            VacancyController::class,
+            'update'
+        ])->middleware('permission:vacancies.update');
+
+        Route::delete('/vacancies/{id}', [
+            VacancyController::class,
+            'destroy'
+        ])->middleware('permission:vacancies.delete');
 
 
         /*

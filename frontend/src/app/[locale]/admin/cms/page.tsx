@@ -932,7 +932,7 @@ export default function CmsPageAdmin() {
               />
 
               <Field
-                label="Hero Title বাংলা"
+                label="Title বাংলা"
                 value={homepage.hero.title_bn}
                 onChange={(v) => updateHomepage('hero', 'title_bn', v)}
               />
@@ -1042,7 +1042,7 @@ export default function CmsPageAdmin() {
                 }
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.commitment.title_bn}
                 onChange={(v) =>
                   updateHomepage('commitment', 'title_bn', v)
@@ -1123,12 +1123,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('intro', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.intro.title_bn}
                 onChange={(v) => updateHomepage('intro', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.intro.title_en}
                 onChange={(v) => updateHomepage('intro', 'title_en', v)}
               />
@@ -1278,14 +1278,14 @@ export default function CmsPageAdmin() {
                       }
                     />
                     <Field
-                      label="Title বাংলা"
+                      label="Hero Title বাংলা"
                       value={item.title_bn}
                       onChange={(v) =>
                         updateActivity(index, 'title_bn', v)
                       }
                     />
                     <Field
-                      label="Title English"
+                      label="Hero Title English"
                       value={item.title_en}
                       onChange={(v) =>
                         updateActivity(index, 'title_en', v)
@@ -1329,12 +1329,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('mission', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.mission.title_bn}
                 onChange={(v) => updateHomepage('mission', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.mission.title_en}
                 onChange={(v) => updateHomepage('mission', 'title_en', v)}
               />
@@ -1373,12 +1373,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('vision', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.vision.title_bn}
                 onChange={(v) => updateHomepage('vision', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.vision.title_en}
                 onChange={(v) => updateHomepage('vision', 'title_en', v)}
               />
@@ -1417,12 +1417,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('projects', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.projects.title_bn}
                 onChange={(v) => updateHomepage('projects', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.projects.title_en}
                 onChange={(v) => updateHomepage('projects', 'title_en', v)}
               />
@@ -1453,12 +1453,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('news', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.news.title_bn}
                 onChange={(v) => updateHomepage('news', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.news.title_en}
                 onChange={(v) => updateHomepage('news', 'title_en', v)}
               />
@@ -1489,12 +1489,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('notices', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.notices.title_bn}
                 onChange={(v) => updateHomepage('notices', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.notices.title_en}
                 onChange={(v) => updateHomepage('notices', 'title_en', v)}
               />
@@ -1525,12 +1525,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('gallery', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.gallery.title_bn}
                 onChange={(v) => updateHomepage('gallery', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.gallery.title_en}
                 onChange={(v) => updateHomepage('gallery', 'title_en', v)}
               />
@@ -1563,12 +1563,12 @@ export default function CmsPageAdmin() {
                 onChange={(v) => updateHomepage('donation', 'label_en', v)}
               />
               <Field
-                label="Title বাংলা"
+                label="Hero Title বাংলা"
                 value={homepage.donation.title_bn}
                 onChange={(v) => updateHomepage('donation', 'title_bn', v)}
               />
               <Field
-                label="Title English"
+                label="Hero Title English"
                 value={homepage.donation.title_en}
                 onChange={(v) => updateHomepage('donation', 'title_en', v)}
               />
