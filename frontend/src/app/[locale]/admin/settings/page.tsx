@@ -31,6 +31,18 @@ export default function SettingsPage() {
   const [contactOfficeHoursEn, setContactOfficeHoursEn] = useState('');
   const [contactMapUrl, setContactMapUrl] = useState('');
 
+  const [socialFacebook, setSocialFacebook] = useState(
+    'https://www.facebook.com/profile.php?id=61551777602468',
+  );
+  const [socialX, setSocialX] = useState('');
+  const [socialTiktok, setSocialTiktok] = useState('');
+  const [socialYoutube, setSocialYoutube] = useState('');
+
+  const [socialFacebookSettingId, setSocialFacebookSettingId] = useState<string | null>(null);
+  const [socialXSettingId, setSocialXSettingId] = useState<string | null>(null);
+  const [socialTiktokSettingId, setSocialTiktokSettingId] = useState<string | null>(null);
+  const [socialYoutubeSettingId, setSocialYoutubeSettingId] = useState<string | null>(null);
+
   const [contactAddressBnSettingId, setContactAddressBnSettingId] = useState<string | null>(null);
   const [contactAddressEnSettingId, setContactAddressEnSettingId] = useState<string | null>(null);
   const [contactPhoneSettingId, setContactPhoneSettingId] = useState<string | null>(null);
@@ -85,6 +97,19 @@ export default function SettingsPage() {
         (item) => item.key === 'contact.google_maps_url',
       );
 
+      const socialFacebookSetting = settings.find(
+        (item) => item.key === 'social.facebook',
+      );
+      const socialXSetting = settings.find(
+        (item) => item.key === 'social.x',
+      );
+      const socialTiktokSetting = settings.find(
+        (item) => item.key === 'social.tiktok',
+      );
+      const socialYoutubeSetting = settings.find(
+        (item) => item.key === 'social.youtube',
+      );
+
       const siteNameBnSetting = settings.find(
         (item) => item.key === 'site_name_bn',
       );
@@ -121,6 +146,19 @@ export default function SettingsPage() {
       setContactOfficeHoursBn(contactOfficeHoursBnSetting?.value || '');
       setContactOfficeHoursEn(contactOfficeHoursEnSetting?.value || '');
       setContactMapUrl(contactMapUrlSetting?.value || '');
+
+      setSocialFacebook(
+        socialFacebookSetting?.value ||
+          'https://www.facebook.com/profile.php?id=61551777602468',
+      );
+      setSocialX(socialXSetting?.value || '');
+      setSocialTiktok(socialTiktokSetting?.value || '');
+      setSocialYoutube(socialYoutubeSetting?.value || '');
+
+      setSocialFacebookSettingId(socialFacebookSetting?.id ?? null);
+      setSocialXSettingId(socialXSetting?.id ?? null);
+      setSocialTiktokSettingId(socialTiktokSetting?.id ?? null);
+      setSocialYoutubeSettingId(socialYoutubeSetting?.id ?? null);
 
       setContactAddressBnSettingId(contactAddressBnSetting?.id ?? null);
       setContactAddressEnSettingId(contactAddressEnSetting?.id ?? null);
@@ -279,6 +317,39 @@ export default function SettingsPage() {
         'string',
         'contact',
         'Google Maps URL for the public Contact page.',
+      );
+
+      await saveSetting(
+        'social.facebook',
+        socialFacebook.trim(),
+        socialFacebookSettingId,
+        'string',
+        'social',
+        'Official Facebook page URL.',
+      );
+      await saveSetting(
+        'social.x',
+        socialX.trim(),
+        socialXSettingId,
+        'string',
+        'social',
+        'Official X (Twitter) profile URL.',
+      );
+      await saveSetting(
+        'social.tiktok',
+        socialTiktok.trim(),
+        socialTiktokSettingId,
+        'string',
+        'social',
+        'Official TikTok profile URL.',
+      );
+      await saveSetting(
+        'social.youtube',
+        socialYoutube.trim(),
+        socialYoutubeSettingId,
+        'string',
+        'social',
+        'Official YouTube channel URL.',
       );
 
       setMessage('Settings saved successfully.');
@@ -515,6 +586,87 @@ export default function SettingsPage() {
                   onChange={(e) => setContactMapUrl(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                   placeholder="https://maps.google.com/..."
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-black text-gray-950">
+                Social Media
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Facebook, X, TikTok এবং YouTube-এর official profile/channel URL এখান থেকে পরিবর্তন করুন।
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="social-facebook"
+                  className="mb-2 block text-sm font-bold text-gray-700"
+                >
+                  Facebook
+                </label>
+                <input
+                  id="social-facebook"
+                  type="url"
+                  value={socialFacebook}
+                  onChange={(e) => setSocialFacebook(e.target.value)}
+                  placeholder="https://www.facebook.com/..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="social-x"
+                  className="mb-2 block text-sm font-bold text-gray-700"
+                >
+                  X (Twitter)
+                </label>
+                <input
+                  id="social-x"
+                  type="url"
+                  value={socialX}
+                  onChange={(e) => setSocialX(e.target.value)}
+                  placeholder="https://x.com/..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="social-tiktok"
+                  className="mb-2 block text-sm font-bold text-gray-700"
+                >
+                  TikTok
+                </label>
+                <input
+                  id="social-tiktok"
+                  type="url"
+                  value={socialTiktok}
+                  onChange={(e) => setSocialTiktok(e.target.value)}
+                  placeholder="https://www.tiktok.com/@..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="social-youtube"
+                  className="mb-2 block text-sm font-bold text-gray-700"
+                >
+                  YouTube
+                </label>
+                <input
+                  id="social-youtube"
+                  type="url"
+                  value={socialYoutube}
+                  onChange={(e) => setSocialYoutube(e.target.value)}
+                  placeholder="https://www.youtube.com/@..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 />
               </div>
             </div>

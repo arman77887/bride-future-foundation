@@ -21,8 +21,8 @@ class HomepageCmsSeeder extends Seeder
 
                 'status' => 'PUBLISHED',
 
-                'seo_title_bn' => 'Bright Further Foundation',
-                'seo_title_en' => 'Bright Further Foundation',
+                'seo_title_bn' => 'Bright Future Foundation',
+                'seo_title_en' => 'Bright Future Foundation',
 
                 'seo_description_bn' =>
                     'মানবিক সহায়তা, সামাজিক উন্নয়ন এবং মানুষের ভবিষ্যৎ নির্মাণে কাজ করা একটি সামাজিক উদ্যোগ।',
@@ -38,8 +38,8 @@ class HomepageCmsSeeder extends Seeder
                     ],
 
                     'hero' => [
-                        'badge_bn' => 'ব্রাইড ফিউচার ফাউন্ডেশন',
-                        'badge_en' => 'Bright Further Foundation',
+                        'badge_bn' => 'ব্রাইট ফিউচার ফাউন্ডেশন',
+                        'badge_en' => 'Bright Future Foundation',
 
                         'title_bn' => 'মানুষের জন্য কাজ, ভবিষ্যতের জন্য অঙ্গীকার',
                         'title_en' => 'Working for People. Building a Better Future.',
@@ -82,10 +82,10 @@ class HomepageCmsSeeder extends Seeder
                         'title_en' => 'For A More Caring and Responsible Society',
 
                         'content_bn' =>
-                            'ব্রাইড ফিউচার ফাউন্ডেশন একটি মানবিক ও সামাজিক কল্যাণমূলক উদ্যোগ। মানুষের প্রয়োজন, সামাজিক দায়িত্ব এবং ভবিষ্যৎ প্রজন্মের সম্ভাবনাকে গুরুত্ব দিয়ে আমরা কার্যক্রম পরিচালনা করতে চাই।',
+                            'ব্রাইট ফিউচার ফাউন্ডেশন একটি মানবিক ও সামাজিক কল্যাণমূলক উদ্যোগ। মানুষের প্রয়োজন, সামাজিক দায়িত্ব এবং ভবিষ্যৎ প্রজন্মের সম্ভাবনাকে গুরুত্ব দিয়ে আমরা কার্যক্রম পরিচালনা করতে চাই।',
 
                         'content_en' =>
-                            'Bright Further Foundation is a humanitarian and social welfare initiative. We focus on people’s needs, social responsibility and creating opportunities for future generations.',
+                            'Bright Future Foundation is a humanitarian and social welfare initiative. We focus on people’s needs, social responsibility and creating opportunities for future generations.',
                     ],
 
                     'impact' => [

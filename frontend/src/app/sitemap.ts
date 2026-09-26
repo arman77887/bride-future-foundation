@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const siteUrl = 'https://brightfuturefoundation.duckdns.org';
+const siteUrl = 'https://bff.crxhub.org';
 
 const pages = [
   '',

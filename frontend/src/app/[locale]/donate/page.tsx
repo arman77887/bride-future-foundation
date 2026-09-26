@@ -32,7 +32,7 @@ export default function DonatePage() {
 
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'https://brightfuturefoundation.duckdns.org/api/v1';
+    'https://bff.crxhub.org/api/v1';
 
   const [methods, setMethods] = useState<DonationMethod[]>([]);
   const [methodsLoading, setMethodsLoading] = useState(true);

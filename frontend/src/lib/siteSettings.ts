@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
 export async function getSiteSettings(): Promise<SiteSettings> {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'https://brightfuturefoundation.duckdns.org/api/v1';
+    'https://bff.crxhub.org/api/v1';
 
   try {
     const response = await fetch(`${baseUrl}/settings`, {

@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
 
-const siteUrl = 'https://brightfuturefoundation.duckdns.org';
+const siteUrl = 'https://bff.crxhub.org';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

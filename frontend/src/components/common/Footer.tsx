@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import NewsletterSubscribe from './NewsletterSubscribe';
 import SiteLogo from './SiteLogo';
+import SocialMedia from './social/SocialMedia';
 
 export default function Footer({ locale }: { locale?: string }) {
   const currentLocale = locale === 'en' ? 'en' : 'bn';
@@ -103,6 +104,7 @@ export default function Footer({ locale }: { locale?: string }) {
             </Link>
 
             <NewsletterSubscribe locale={currentLocale} />
+            <SocialMedia />
           </div>
 
           {/* Quick Links */}

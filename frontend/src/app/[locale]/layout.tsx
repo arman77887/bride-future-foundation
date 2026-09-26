@@ -10,7 +10,7 @@ interface LocaleLayoutProps {
   };
 }
 
-const siteUrl = 'https://brightfuturefoundation.duckdns.org';
+const siteUrl = 'https://bff.crxhub.org';
 
 export async function generateMetadata({
   params,
