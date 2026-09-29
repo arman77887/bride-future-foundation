@@ -16,7 +16,10 @@ interface MediaPickerProps {
   existingUrl?: string | null;
   onChange: (mediaId: string | null) => void;
   label?: string;
-  mediaType?: 'logo' | 'cover';
+  mediaType?: 'logo' | 'cover' | 'gallery';
+  multiple?: boolean;
+  selectedValues?: string[];
+  onMultipleChange?: (ids: string[]) => void;
 }
 
 export default function MediaPicker({
@@ -25,11 +28,15 @@ export default function MediaPicker({
   onChange,
   label = 'Cover Image',
   mediaType = 'cover',
+  multiple = false,
+  selectedValues = [],
+  onMultipleChange,
 }: MediaPickerProps) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   const loadMedia = async () => {
     try {
@@ -88,16 +95,18 @@ export default function MediaPicker({
 
       URL.revokeObjectURL(objectUrl);
 
-      const ratio = image.width / image.height;
-      const targetRatio = mediaType === 'logo' ? 1 : 16 / 9;
-      const tolerance = 0.03;
+      if (mediaType !== 'gallery') {
+        const ratio = image.width / image.height;
+        const targetRatio = mediaType === 'logo' ? 1 : 16 / 9;
+        const tolerance = 0.03;
 
-      if (Math.abs(ratio - targetRatio) > tolerance) {
-        throw new Error(
-          mediaType === 'logo'
-            ? 'Logo must use a 1:1 square ratio. Recommended: 512×512 px.'
-            : 'Cover Photo must use a 16:9 ratio. Recommended: 1920×1080 px.'
-        );
+        if (Math.abs(ratio - targetRatio) > tolerance) {
+          throw new Error(
+            mediaType === 'logo'
+              ? 'Logo must use a 1:1 square ratio. Recommended: 512×512 px.'
+              : 'Cover Photo must use a 16:9 ratio. Recommended: 1920×1080 px.'
+          );
+        }
       }
 
       const formData = new FormData();
@@ -157,6 +166,13 @@ export default function MediaPicker({
     item.mime_type?.startsWith('image/')
   );
 
+  const visibleImages =
+    mediaType === 'gallery' && search.trim()
+      ? images.filter((item) =>
+          item.filename.toLowerCase().includes(search.trim().toLowerCase())
+        )
+      : images;
+
 
 
   return (
@@ -194,7 +210,9 @@ export default function MediaPicker({
           <p className="mb-2 text-xs text-gray-500">
             {mediaType === 'logo'
               ? 'Recommended: 512×512 px • 1:1 • JPG/PNG • Max 20 MB'
-              : 'Recommended: 1920×1080 px • 16:9 • JPG/PNG • Max 20 MB'}
+              : mediaType === 'gallery'
+                ? 'Gallery image • Portrait, landscape or square • JPG/PNG • Max 20 MB'
+                : 'Recommended: 1920×1080 px • 16:9 • JPG/PNG • Max 20 MB'}
           </p>
 
           <label
@@ -229,42 +247,110 @@ export default function MediaPicker({
         )}
 
         {loading ? (
-          <p className="text-sm text-gray-500">
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
             Loading images...
-          </p>
-        ) : images.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No images available. Upload an image above.
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {images.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onChange(item.id)}
-                className={`bff-button overflow-hidden rounded-lg border-2 bg-white text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
-                  value === item.id
-                    ? 'border-emerald-500 ring-2 ring-emerald-100'
-                    : 'border-gray-200 hover:border-emerald-300'
-                }`}
-              >
-                <img
-                  src={resolveMediaUrl(item.url) || ''}
-                  alt={item.filename}
-                  className="h-24 w-full object-cover"
-                />
-
-                <div className="truncate px-2 py-2 text-xs text-gray-600">
-                  {item.filename}
-                </div>
-
-                <div className="break-all px-2 pb-2 text-[10px] text-gray-400">
-                  {resolveMediaUrl(item.url)}
-                </div>
-              </button>
-            ))}
           </div>
+        ) : images.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
+            <p className="font-semibold text-gray-700">No images available</p>
+            <p className="mt-1 text-sm text-gray-500">
+              Upload an image above to add it to the Media Library.
+            </p>
+          </div>
+        ) : (
+          <>
+            {mediaType === 'gallery' && (
+              <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      Media Library
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {images.length} image{images.length === 1 ? '' : 's'} available • {multiple ? `${selectedValues.length} selected` : 'Click an image to select it'}
+                    </p>
+                  </div>
+
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search images..."
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 sm:w-72"
+                  />
+                </div>
+              </div>
+            )}
+
+            {visibleImages.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+                No images match your search.
+              </div>
+            ) : (
+              <div
+                className={
+                  mediaType === 'gallery'
+                    ? 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                    : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5'
+                }
+              >
+                {visibleImages.map((item) => {
+                  const isSelected = multiple
+                    ? selectedValues.includes(item.id)
+                    : value === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (multiple && onMultipleChange) {
+                          onMultipleChange(
+                            isSelected
+                              ? selectedValues.filter((id) => id !== item.id)
+                              : [...selectedValues, item.id],
+                          );
+                          return;
+                        }
+
+                        onChange(item.id);
+                      }}
+                      aria-pressed={isSelected}
+                      className={`group relative overflow-hidden rounded-xl border-2 bg-white text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] ${
+                        isSelected
+                          ? 'border-emerald-500 ring-4 ring-emerald-100'
+                          : 'border-gray-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      <div className={mediaType === 'gallery' ? 'aspect-square bg-gray-100' : 'h-24 bg-gray-100'}>
+                        <img
+                          src={resolveMediaUrl(item.url) || ''}
+                          alt={item.filename}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                      </div>
+
+                      {isSelected && (
+                        <div className="absolute right-2 top-2 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white shadow">
+                          ✓ Selected
+                        </div>
+                      )}
+
+                      <div className="p-2.5">
+                        <p
+                          className="truncate text-xs font-medium text-gray-700"
+                          title={item.filename}
+                        >
+                          {item.filename}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

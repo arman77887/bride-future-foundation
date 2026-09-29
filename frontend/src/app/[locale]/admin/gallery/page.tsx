@@ -73,6 +73,7 @@ export default function AdminGalleryPage({
     useState<GalleryItem | null>(null);
 
   const [mediaId, setMediaId] = useState<string | null>(null);
+  const [selectedMediaIds, setSelectedMediaIds] = useState<string[]>([]);
   const [imageTitleBn, setImageTitleBn] = useState('');
   const [imageTitleEn, setImageTitleEn] = useState('');
   const [displayOrder, setDisplayOrder] = useState(0);
@@ -207,6 +208,7 @@ export default function AdminGalleryPage({
     setSelectedAlbum(album);
     setEditingImage(null);
     setMediaId(null);
+    setSelectedMediaIds([]);
     setImageTitleBn('');
     setImageTitleEn('');
     setDisplayOrder(0);
@@ -216,6 +218,7 @@ export default function AdminGalleryPage({
     setSelectedAlbum(album);
     setEditingImage(item);
     setMediaId(item.media_id || null);
+    setSelectedMediaIds([]);
     setImageTitleBn(item.title_bn || '');
     setImageTitleEn(item.title_en || '');
     setDisplayOrder(item.display_order || 0);
@@ -224,6 +227,7 @@ export default function AdminGalleryPage({
   function resetImageForm() {
     setEditingImage(null);
     setMediaId(null);
+    setSelectedMediaIds([]);
     setImageTitleBn('');
     setImageTitleEn('');
     setDisplayOrder(0);
@@ -244,27 +248,36 @@ export default function AdminGalleryPage({
       return;
     }
 
-    if (!mediaId && !editingImage) {
+    if (editingImage && !mediaId) {
       setMessage(
         isBn ? 'একটি ছবি নির্বাচন করুন।' : 'Select an image.',
       );
+      setMessageType('error');
+      return;
+    }
+
+    if (!editingImage && selectedMediaIds.length === 0) {
+      setMessage(
+        isBn
+          ? 'কমপক্ষে একটি ছবি নির্বাচন করুন।'
+          : 'Select at least one image.',
+      );
+      setMessageType('error');
       return;
     }
 
     setSavingImage(true);
 
     try {
-      const payload = {
-        media_id: mediaId,
-        title_bn: imageTitleBn,
-        title_en: imageTitleEn,
-        display_order: displayOrder,
-      };
-
       if (editingImage) {
         await api.put(
           `/gallery/items/${editingImage.id}`,
-          payload,
+          {
+            media_id: mediaId,
+            title_bn: imageTitleBn,
+            title_en: imageTitleEn,
+            display_order: displayOrder,
+          },
         );
 
         setMessage(
@@ -273,15 +286,22 @@ export default function AdminGalleryPage({
             : 'Image updated successfully.',
         );
       } else {
-        await api.post('/gallery/items', {
-          gallery_album_id: selectedAlbum.id,
-          ...payload,
-        });
+        const ids = Array.from(new Set(selectedMediaIds));
+
+        for (let index = 0; index < ids.length; index += 1) {
+          await api.post('/gallery/items', {
+            gallery_album_id: selectedAlbum.id,
+            media_id: ids[index],
+            title_bn: ids.length === 1 ? imageTitleBn : '',
+            title_en: ids.length === 1 ? imageTitleEn : '',
+            display_order: displayOrder + index,
+          });
+        }
 
         setMessage(
           isBn
-            ? 'ছবি সফলভাবে যোগ হয়েছে।'
-            : 'Image added successfully.',
+            ? `✓ ${ids.length}টি ছবি সফলভাবে যোগ হয়েছে।`
+            : `✓ ${ids.length} image${ids.length === 1 ? '' : 's'} added successfully.`,
         );
       }
 
@@ -649,12 +669,38 @@ export default function AdminGalleryPage({
                     : null
                 }
                 onChange={setMediaId}
+                multiple={!editingImage}
+                selectedValues={selectedMediaIds}
+                onMultipleChange={setSelectedMediaIds}
                 label={
-                  isBn
-                    ? 'ছবি নির্বাচন / Upload'
-                    : 'Select / Upload Image'
+                  editingImage
+                    ? isBn
+                      ? 'ছবি পরিবর্তন করুন'
+                      : 'Change Image'
+                    : isBn
+                      ? 'এক বা একাধিক ছবি নির্বাচন করুন'
+                      : 'Select One or More Images'
                 }
+                mediaType="gallery"
               />
+
+              {!editingImage && selectedMediaIds.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                  <p className="text-sm font-semibold text-emerald-800">
+                    {isBn
+                      ? `${selectedMediaIds.length}টি ছবি নির্বাচন করা হয়েছে`
+                      : `${selectedMediaIds.length} image${selectedMediaIds.length === 1 ? '' : 's'} selected`}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMediaIds([])}
+                    className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+                  >
+                    {isBn ? 'সব নির্বাচন বাতিল' : 'Clear selection'}
+                  </button>
+                </div>
+              )}
 
               <input
                 value={imageTitleBn}

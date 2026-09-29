@@ -1,4 +1,7 @@
 import { api } from '@/services/api';
+import GalleryViewer, {
+  type GalleryPhoto,
+} from '@/components/gallery/GalleryViewer';
 
 type Locale = 'bn' | 'en';
 
@@ -65,110 +68,167 @@ export default async function GalleryPage({
     albums = [];
   }
 
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="bg-white px-6 py-12">
-        <div className="mx-auto max-w-6xl">
-          <h1 className="text-4xl font-bold text-gray-900">
-            {locale === 'bn' ? 'গ্যালারি' : 'Gallery'}
-          </h1>
+  const totalPhotos = albums.reduce(
+    (total, album) => total + (album.items?.length || 0),
+    0,
+  );
 
-          <p className="mt-3 text-gray-600">
-            {locale === 'bn'
-              ? 'আমাদের কার্যক্রম ও স্মরণীয় মুহূর্তের ছবি দেখুন।'
-              : 'Explore photos from our activities and memorable moments.'}
-          </p>
+  return (
+    <main className="min-h-screen bg-[#f7faf9]">
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-800 to-teal-700 text-white">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-emerald-300/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="max-w-3xl">
+            <div className="mb-5 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
+              {locale === 'bn'
+                ? 'ব্রাইট ফিউচার ফাউন্ডেশন'
+                : 'Bright Future Foundation'}
+            </div>
+
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              {locale === 'bn'
+                ? 'আমাদের গ্যালারি'
+                : 'Our Gallery'}
+            </h1>
+
+            <p className="mt-5 max-w-2xl text-base leading-7 text-emerald-50 sm:text-lg">
+              {locale === 'bn'
+                ? 'আমাদের কার্যক্রম, উদ্যোগ এবং স্মরণীয় মুহূর্তগুলো ছবির মাধ্যমে ঘুরে দেখুন।'
+                : 'Explore the activities, initiatives and memorable moments of Bright Future Foundation through our photographs.'}
+            </p>
+
+            {albums.length > 0 && (
+              <div className="mt-8 flex flex-wrap gap-3">
+                <div className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                  <span className="block text-xl font-bold">
+                    {albums.length}
+                  </span>
+                  <span className="text-xs text-emerald-100">
+                    {locale === 'bn' ? 'অ্যালবাম' : 'Albums'}
+                  </span>
+                </div>
+
+                <div className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                  <span className="block text-xl font-bold">
+                    {totalPhotos}
+                  </span>
+                  <span className="text-xs text-emerald-100">
+                    {locale === 'bn' ? 'ছবি' : 'Photos'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
-      <section className="px-6 py-12">
-        <div className="mx-auto max-w-6xl space-y-12">
+      <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           {albums.length === 0 ? (
-            <div className="rounded-xl bg-white p-10 text-center shadow">
-              <p className="text-gray-500">
+            <div className="rounded-3xl border border-gray-100 bg-white px-6 py-16 text-center shadow-sm">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-3xl">
+                ◫
+              </div>
+
+              <h2 className="mt-5 text-xl font-bold text-gray-900">
                 {locale === 'bn'
-                  ? 'এখনও কোনো গ্যালারি অ্যালবাম নেই।'
-                  : 'No gallery albums available yet.'}
+                  ? 'গ্যালারি শীঘ্রই আসছে'
+                  : 'Gallery coming soon'}
+              </h2>
+
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                {locale === 'bn'
+                  ? 'এখনও কোনো গ্যালারি অ্যালবাম প্রকাশ করা হয়নি।'
+                  : 'No gallery albums have been published yet.'}
               </p>
             </div>
           ) : (
-            albums.map((album) => (
-              <article
-                key={album.id}
-                className="rounded-2xl bg-white p-6 shadow"
-              >
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {localized(
-                    locale,
-                    album.title_bn,
-                    album.title_en,
-                  )}
-                </h2>
+            <div className="space-y-10 sm:space-y-14">
+              {albums.map((album, albumIndex) => {
+                const albumTitle = localized(
+                  locale,
+                  album.title_bn,
+                  album.title_en,
+                  locale === 'bn' ? 'অ্যালবাম' : 'Album',
+                );
 
-                {(album.description_bn || album.description_en) && (
-                  <p className="mt-2 text-gray-600">
-                    {localized(
+                const photos = (album.items || []).reduce<GalleryPhoto[]>(
+                  (result, item) => {
+                    const src = resolveMediaUrl(
+                      item.image_url || item.file_url,
+                    );
+
+                    if (!src) {
+                      return result;
+                    }
+
+                    const title = localized(
                       locale,
-                      album.description_bn,
-                      album.description_en,
-                    )}
-                  </p>
-                )}
+                      item.title_bn,
+                      item.title_en,
+                    );
 
-                {album.items && album.items.length > 0 ? (
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {album.items.map((item) => {
-                      const imageUrl = resolveMediaUrl(
-                        item.image_url || item.file_url,
-                      );
+                    result.push({
+                      id: item.id,
+                      src,
+                      title: title || undefined,
+                      alt: title || albumTitle,
+                    });
 
-                      if (!imageUrl) return null;
+                    return result;
+                  },
+                  [],
+                );
 
-                      return (
-                        <div
-                          key={item.id}
-                          className="group overflow-hidden rounded-xl bg-gray-100"
-                        >
-                          <img
-                            src={imageUrl}
-                            alt={localized(
-                              locale,
-                              item.title_bn,
-                              item.title_en,
-                              localized(
+                return (
+                  <article
+                    key={album.id}
+                    className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
+                  >
+                    <div className="border-b border-gray-100 px-5 py-6 sm:px-8 sm:py-7">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-11 min-w-11 items-center justify-center rounded-xl bg-emerald-50 text-sm font-bold text-emerald-700">
+                          {String(albumIndex + 1).padStart(2, '0')}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                              {albumTitle}
+                            </h2>
+
+                            <span className="w-fit rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600">
+                              {photos.length}{' '}
+                              {locale === 'bn' ? 'ছবি' : photos.length === 1 ? 'Photo' : 'Photos'}
+                            </span>
+                          </div>
+
+                          {(album.description_bn ||
+                            album.description_en) && (
+                            <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600 sm:text-base">
+                              {localized(
                                 locale,
-                                album.title_bn,
-                                album.title_en,
-                                'Gallery image',
-                              ),
-                            )}
-                            className="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
-                          />
-
-                          {(item.title_bn || item.title_en) && (
-                            <div className="p-3">
-                              <p className="font-medium text-gray-800">
-                                {localized(
-                                  locale,
-                                  item.title_bn,
-                                  item.title_en,
-                                )}
-                              </p>
-                            </div>
+                                album.description_bn,
+                                album.description_en,
+                              )}
+                            </p>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="mt-6 text-gray-500">
-                    {locale === 'bn'
-                      ? 'এই অ্যালবামে এখনও কোনো ছবি নেই।'
-                      : 'No images in this album yet.'}
-                  </p>
-                )}
-              </article>
-            ))
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-6 lg:p-8">
+                      <GalleryViewer
+                        photos={photos}
+                        locale={locale}
+                      />
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           )}
         </div>
       </section>
