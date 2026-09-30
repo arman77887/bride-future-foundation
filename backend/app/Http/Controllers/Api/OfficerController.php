@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Officer\StoreOfficerRequest;
+use App\Http\Requests\Officer\UpdateOfficerRequest;
 use App\Http\Requests\Officer\VerifyOfficerRequest;
 use App\Http\Resources\OfficerProfileResource;
 use App\Models\OfficerProfile;
@@ -19,7 +20,7 @@ class OfficerController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $officers = OfficerProfile::with(['department', 'position'])
+        $officers = OfficerProfile::with(['department', 'position', 'avatarMedia'])
             ->where('is_public', true)
             ->paginate(15);
 
@@ -31,7 +32,7 @@ class OfficerController extends Controller
      */
     public function adminIndex(Request $request): AnonymousResourceCollection
     {
-        $query = OfficerProfile::with(['department', 'position'])
+        $query = OfficerProfile::with(['department', 'position', 'avatarMedia'])
             ->latest();
 
         if ($request->filled('search')) {
@@ -79,12 +80,29 @@ class OfficerController extends Controller
             ]
         ));
 
-        $officer->load(['department', 'position']);
+        $officer->load(['department', 'position', 'avatarMedia']);
 
         return response()->json([
             'message' => 'Officer profile submitted successfully',
             'data' => new OfficerProfileResource($officer),
         ], 201);
+    }
+
+    /**
+     * Update officer/member profile.
+     */
+    public function update(UpdateOfficerRequest $request, string $id): JsonResponse
+    {
+        $officer = OfficerProfile::findOrFail($id);
+
+        $officer->update($request->validated());
+
+        $officer->load(['department', 'position', 'avatarMedia']);
+
+        return response()->json([
+            'message' => 'Officer profile updated successfully',
+            'data' => new OfficerProfileResource($officer),
+        ]);
     }
 
     /**
@@ -112,7 +130,7 @@ class OfficerController extends Controller
             'review_note' => $request->validated('remarks'),
         ]);
 
-        $officer->load(['department', 'position']);
+        $officer->load(['department', 'position', 'avatarMedia']);
 
         return response()->json([
             'message' => 'Officer verification status updated',

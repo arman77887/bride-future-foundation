@@ -2,57 +2,99 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '@/services/api';
+import MediaPicker from '@/components/admin/MediaPicker';
+
+interface Department {
+  id: string;
+  name_bn?: string;
+  name_en?: string;
+}
+
+interface Position {
+  id: string;
+  title_bn?: string;
+  title_en?: string;
+}
 
 interface Officer {
   id: string;
   official_id: string;
   name: string;
+  avatar_media_id?: string | null;
+  avatar_url?: string | null;
   status: string;
   is_public: boolean;
-  email_personal?: string;
-  phone?: string;
-  department?: {
-    id?: string;
-    name_bn?: string;
-    name_en?: string;
-  };
-  position?: {
-    id?: string;
-    title_bn?: string;
-    title_en?: string;
-  };
-  created_at?: string;
+  department?: Department;
+  position?: Position;
 }
+
+interface MemberForm {
+  name: string;
+  official_id: string;
+  department_id: string;
+  position_id: string;
+  avatar_media_id: string | null;
+}
+
+const emptyForm: MemberForm = {
+  name: '',
+  official_id: '',
+  department_id: '',
+  position_id: '',
+  avatar_media_id: null,
+};
 
 export default function OfficersPage() {
   const [officers, setOfficers] = useState<Officer[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [form, setForm] = useState<MemberForm>(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   const loadOfficers = async () => {
+    const response = await api.get('/admin/officers');
+    const payload = response?.data?.data;
+
+    if (Array.isArray(payload)) {
+      setOfficers(payload);
+    } else if (Array.isArray(payload?.data)) {
+      setOfficers(payload.data);
+    } else {
+      setOfficers([]);
+    }
+  };
+
+  const loadOptions = async () => {
+    const response = await api.get('/admin/vacancies/options');
+    setDepartments(
+      Array.isArray(response?.data?.departments)
+        ? response.data.departments
+        : []
+    );
+    setPositions(
+      Array.isArray(response?.data?.positions)
+        ? response.data.positions
+        : []
+    );
+  };
+
+  const loadAll = async () => {
     try {
       setLoading(true);
       setError('');
-
-      const response = await api.get('/admin/officers');
-
-      const data = response?.data?.data;
-
-      if (Array.isArray(data)) {
-        setOfficers(data);
-      } else if (Array.isArray(data?.data)) {
-        setOfficers(data.data);
-      } else {
-        setOfficers([]);
-      }
+      await Promise.all([loadOfficers(), loadOptions()]);
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        'Failed to load officers.'
+          err?.message ||
+          'Failed to load members.'
       );
     } finally {
       setLoading(false);
@@ -60,8 +102,81 @@ export default function OfficersPage() {
   };
 
   useEffect(() => {
-    loadOfficers();
+    loadAll();
   }, []);
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setMessage('');
+    setError('');
+    setShowForm(true);
+  };
+
+  const openEdit = (officer: Officer) => {
+    setEditingId(officer.id);
+    setForm({
+      name: officer.name || '',
+      official_id: officer.official_id || '',
+      department_id: officer.department?.id || '',
+      position_id: officer.position?.id || '',
+      avatar_media_id: officer.avatar_media_id || null,
+    });
+    setMessage('');
+    setError('');
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyForm);
+  };
+
+  const saveMember = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    try {
+      setSaving(true);
+      setError('');
+      setMessage('');
+
+      const payload = {
+        name: form.name.trim(),
+        official_id: form.official_id.trim(),
+        department_id: form.department_id,
+        position_id: form.position_id,
+        avatar_media_id: form.avatar_media_id || null,
+      };
+
+      if (editingId) {
+        await api.put(`/officers/${editingId}`, payload);
+        setMessage('Member updated successfully.');
+      } else {
+        await api.post('/officers', payload);
+        setMessage('Member added successfully. Approve it to publish.');
+      }
+
+      closeForm();
+      await loadOfficers();
+    } catch (err: any) {
+      const validation = err?.response?.data?.errors;
+      const firstValidation = validation
+        ? Object.values(validation).flat().find(Boolean)
+        : null;
+
+      setError(
+        String(
+          firstValidation ||
+            err?.response?.data?.message ||
+            err?.message ||
+            'Unable to save member.'
+        )
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const verify = async (
     id: string,
@@ -80,16 +195,16 @@ export default function OfficersPage() {
       setRemarks('');
       setMessage(
         status === 'APPROVED'
-          ? 'Officer approved successfully.'
-          : 'Officer rejected successfully.'
+          ? 'Member approved and published.'
+          : 'Member rejected.'
       );
 
       await loadOfficers();
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        'Verification failed.'
+          err?.message ||
+          'Verification failed.'
       );
     } finally {
       setProcessing(null);
@@ -100,16 +215,12 @@ export default function OfficersPage() {
     switch (status) {
       case 'APPROVED':
         return 'bg-green-100 text-green-700';
-
       case 'REJECTED':
         return 'bg-red-100 text-red-700';
-
       case 'UNDER_REVIEW':
         return 'bg-yellow-100 text-yellow-700';
-
       case 'SUSPENDED':
         return 'bg-gray-200 text-gray-700';
-
       default:
         return 'bg-blue-100 text-blue-700';
     }
@@ -117,37 +228,190 @@ export default function OfficersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Officers
-        </h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Foundation Members
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            সদস্যের ছবি, নাম, বিভাগ ও পদবী পরিচালনা করুন
+          </p>
+        </div>
 
-        <p className="mt-1 text-sm text-gray-500">
-          কর্মকর্তা যাচাই ও ব্যবস্থাপনা
-        </p>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600"
+        >
+          + Add Member
+        </button>
       </div>
 
       {message && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           {message}
         </div>
       )}
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
+      )}
+
+      {showForm && (
+        <form
+          onSubmit={saveMember}
+          className="space-y-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">
+              {editingId ? 'Edit Member' : 'Add Member'}
+            </h2>
+
+            <button
+              type="button"
+              onClick={closeForm}
+              className="text-sm font-semibold text-gray-500 hover:text-gray-900"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Member Name
+              </label>
+              <input
+                required
+                value={form.name}
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    name: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Member name"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Member / Official ID
+              </label>
+              <input
+                required
+                value={form.official_id}
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    official_id: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="BFF-001"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Department
+              </label>
+              <select
+                required
+                value={form.department_id}
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    department_id: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              >
+                <option value="">Select department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name_bn ||
+                      department.name_en ||
+                      department.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Designation / Position
+              </label>
+              <select
+                required
+                value={form.position_id}
+                onChange={(e) =>
+                  setForm((current) => ({
+                    ...current,
+                    position_id: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              >
+                <option value="">Select designation</option>
+                {positions.map((position) => (
+                  <option key={position.id} value={position.id}>
+                    {position.title_bn ||
+                      position.title_en ||
+                      position.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <MediaPicker
+            value={form.avatar_media_id}
+            onChange={(mediaId) =>
+              setForm((current) => ({
+                ...current,
+                avatar_media_id: mediaId,
+              }))
+            }
+            label="Member Photo"
+            mediaType="logo"
+          />
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeForm}
+              className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
+            >
+              {saving
+                ? 'Saving...'
+                : editingId
+                  ? 'Update Member'
+                  : 'Add Member'}
+            </button>
+          </div>
+        </form>
       )}
 
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Verification remarks
         </label>
-
         <textarea
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
-          rows={3}
+          rows={2}
           placeholder="Optional remarks..."
           className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
         />
@@ -156,11 +420,11 @@ export default function OfficersPage() {
       <div className="overflow-hidden rounded-xl bg-white shadow-sm">
         {loading ? (
           <div className="p-8 text-center text-gray-500">
-            Loading officers...
+            Loading members...
           </div>
         ) : officers.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            No officers found.
+          <div className="p-10 text-center text-gray-500">
+            No members found. Click “Add Member” to create the first member.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -168,44 +432,46 @@ export default function OfficersPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-gray-500">
-                    Officer
+                    Member
                   </th>
-
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-gray-500">
-                    Official ID
+                    ID
                   </th>
-
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-gray-500">
                     Department
                   </th>
-
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-gray-500">
-                    Position
+                    Designation
                   </th>
-
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase text-gray-500">
                     Status
                   </th>
-
                   <th className="px-5 py-4 text-right text-xs font-semibold uppercase text-gray-500">
-                    Action
+                    Actions
                   </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-100">
                 {officers.map((officer) => (
-                  <tr
-                    key={officer.id}
-                    className="hover:bg-gray-50"
-                  >
+                  <tr key={officer.id} className="hover:bg-gray-50">
                     <td className="px-5 py-4">
-                      <div className="font-semibold text-gray-900">
-                        {officer.name}
-                      </div>
+                      <div className="flex items-center gap-3">
+                        {officer.avatar_url ? (
+                          <img
+                            src={officer.avatar_url}
+                            alt={officer.name}
+                            className="h-12 w-12 rounded-full object-cover ring-2 ring-emerald-100"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
+                            {officer.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
 
-                      <div className="text-xs text-gray-500">
-                        {officer.email_personal || officer.phone || ''}
+                        <div className="font-semibold text-gray-900">
+                          {officer.name}
+                        </div>
                       </div>
                     </td>
 
@@ -214,14 +480,14 @@ export default function OfficersPage() {
                     </td>
 
                     <td className="px-5 py-4 text-sm text-gray-700">
-                      {officer.department?.name_en ||
-                        officer.department?.name_bn ||
+                      {officer.department?.name_bn ||
+                        officer.department?.name_en ||
                         '-'}
                     </td>
 
                     <td className="px-5 py-4 text-sm text-gray-700">
-                      {officer.position?.title_en ||
-                        officer.position?.title_bn ||
+                      {officer.position?.title_bn ||
+                        officer.position?.title_en ||
                         '-'}
                     </td>
 
@@ -236,41 +502,41 @@ export default function OfficersPage() {
                     </td>
 
                     <td className="px-5 py-4">
-                      {officer.status === 'APPROVED' ? (
-                        <span className="text-sm font-medium text-green-600">
-                          Public
-                        </span>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            disabled={processing === officer.id}
-                            onClick={() =>
-                              verify(
-                                officer.id,
-                                'APPROVED'
-                              )
-                            }
-                            className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
-                          >
-                            Approve
-                          </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(officer)}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                        >
+                          Edit
+                        </button>
 
-                          <button
-                            type="button"
-                            disabled={processing === officer.id}
-                            onClick={() =>
-                              verify(
-                                officer.id,
-                                'REJECTED'
-                              )
-                            }
-                            className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
+                        {officer.status !== 'APPROVED' && (
+                          <>
+                            <button
+                              type="button"
+                              disabled={processing === officer.id}
+                              onClick={() =>
+                                verify(officer.id, 'APPROVED')
+                              }
+                              className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                            >
+                              Approve
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={processing === officer.id}
+                              onClick={() =>
+                                verify(officer.id, 'REJECTED')
+                              }
+                              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

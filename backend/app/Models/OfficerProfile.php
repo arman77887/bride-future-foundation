@@ -21,6 +21,7 @@ class OfficerProfile extends Model
         'bio_bn',
         'bio_en',
         'avatar_url',
+        'avatar_media_id',
         'email_personal',
         'phone',
         'address',
@@ -48,6 +49,11 @@ class OfficerProfile extends Model
     public function position()
     {
         return $this->belongsTo(Position::class);
+    }
+
+    public function avatarMedia()
+    {
+        return $this->belongsTo(Media::class, 'avatar_media_id');
     }
 
     public function documents()

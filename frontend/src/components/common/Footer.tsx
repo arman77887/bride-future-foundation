@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import api from '@/services/api';
+import MemberCarousel, { HomeMember } from '@/components/home/MemberCarousel';
 import NewsletterSubscribe from './NewsletterSubscribe';
 import SiteLogo from './SiteLogo';
 import SocialMedia from './social/SocialMedia';
@@ -8,6 +11,34 @@ import SocialMedia from './social/SocialMedia';
 export default function Footer({ locale }: { locale?: string }) {
   const currentLocale = locale === 'en' ? 'en' : 'bn';
   const isBn = currentLocale === 'bn';
+  const [members, setMembers] = useState<HomeMember[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    api.get('/officers')
+      .then((response) => {
+        const payload = response?.data?.data;
+        const items = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+
+        if (active) {
+          setMembers(items);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setMembers([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const links = [
     {
@@ -59,6 +90,8 @@ export default function Footer({ locale }: { locale?: string }) {
 
   return (
     <footer className="bg-gray-950 text-white">
+      <MemberCarousel members={members} locale={currentLocale} />
+
       {/* Main Footer */}
       <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8 lg:px-10">
         <div className="grid gap-12 lg:grid-cols-4">
