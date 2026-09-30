@@ -39,8 +39,8 @@ const menuItems: MenuItem[] = [
     href: 'contact-messages',
   },
   {
-    labelBn: 'কর্মকর্তাবৃন্দ',
-    labelEn: 'Officers',
+    labelBn: 'সদস্যবৃন্দ',
+    labelEn: 'Members',
     href: 'officers',
   },
   {
