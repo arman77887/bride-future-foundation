@@ -309,6 +309,16 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
             'store'
         ])->middleware('permission:officers.create');
 
+        Route::post('/admin/officers/departments', [
+            OfficerController::class,
+            'storeDepartment'
+        ])->middleware('permission:officers.create');
+
+        Route::post('/admin/officers/positions', [
+            OfficerController::class,
+            'storePosition'
+        ])->middleware('permission:officers.create');
+
         Route::put('/officers/{id}', [
             OfficerController::class,
             'update'

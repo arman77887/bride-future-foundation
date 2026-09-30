@@ -57,6 +57,13 @@ export default function OfficersPage() {
   const [remarks, setRemarks] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [showDepartmentCreator, setShowDepartmentCreator] = useState(false);
+  const [showPositionCreator, setShowPositionCreator] = useState(false);
+  const [newDepartmentBn, setNewDepartmentBn] = useState('');
+  const [newDepartmentEn, setNewDepartmentEn] = useState('');
+  const [newPositionBn, setNewPositionBn] = useState('');
+  const [newPositionEn, setNewPositionEn] = useState('');
+  const [creatingOption, setCreatingOption] = useState(false);
 
   const loadOfficers = async () => {
     const response = await api.get('/admin/officers');
@@ -131,6 +138,82 @@ export default function OfficersPage() {
     setShowForm(false);
     setEditingId(null);
     setForm(emptyForm);
+  };
+
+  const createDepartment = async () => {
+    if (!newDepartmentBn.trim() || !newDepartmentEn.trim()) {
+      setError('Department-এর বাংলা ও English নাম দিন।');
+      return;
+    }
+
+    try {
+      setCreatingOption(true);
+      setError('');
+
+      const response = await api.post('/admin/officers/departments', {
+        name_bn: newDepartmentBn.trim(),
+        name_en: newDepartmentEn.trim(),
+      });
+
+      const created = response?.data?.data as Department;
+
+      setDepartments((current) => [...current, created]);
+      setForm((current) => ({
+        ...current,
+        department_id: created.id,
+      }));
+
+      setNewDepartmentBn('');
+      setNewDepartmentEn('');
+      setShowDepartmentCreator(false);
+      setMessage('New department added successfully.');
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Unable to create department.'
+      );
+    } finally {
+      setCreatingOption(false);
+    }
+  };
+
+  const createPosition = async () => {
+    if (!newPositionBn.trim() || !newPositionEn.trim()) {
+      setError('Designation-এর বাংলা ও English নাম দিন।');
+      return;
+    }
+
+    try {
+      setCreatingOption(true);
+      setError('');
+
+      const response = await api.post('/admin/officers/positions', {
+        title_bn: newPositionBn.trim(),
+        title_en: newPositionEn.trim(),
+      });
+
+      const created = response?.data?.data as Position;
+
+      setPositions((current) => [...current, created]);
+      setForm((current) => ({
+        ...current,
+        position_id: created.id,
+      }));
+
+      setNewPositionBn('');
+      setNewPositionEn('');
+      setShowPositionCreator(false);
+      setMessage('New designation added successfully.');
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Unable to create designation.'
+      );
+    } finally {
+      setCreatingOption(false);
+    }
   };
 
   const saveMember = async (event: React.FormEvent) => {
@@ -316,9 +399,21 @@ export default function OfficersPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Department
-              </label>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Department
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowDepartmentCreator((current) => !current)
+                  }
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-600"
+                >
+                  {showDepartmentCreator ? 'Cancel' : '+ Add New'}
+                </button>
+              </div>
+
               <select
                 required
                 value={form.department_id}
@@ -339,12 +434,49 @@ export default function OfficersPage() {
                   </option>
                 ))}
               </select>
+
+              {showDepartmentCreator && (
+                <div className="mt-3 space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <input
+                    value={newDepartmentBn}
+                    onChange={(e) => setNewDepartmentBn(e.target.value)}
+                    placeholder="বাংলা নাম — যেমন: প্রশাসন বিভাগ"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    value={newDepartmentEn}
+                    onChange={(e) => setNewDepartmentEn(e.target.value)}
+                    placeholder="English name — e.g. Administration"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    disabled={creatingOption}
+                    onClick={createDepartment}
+                    className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    {creatingOption ? 'Adding...' : 'Add Department'}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Designation / Position
-              </label>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Designation / Position
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPositionCreator((current) => !current)
+                  }
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-600"
+                >
+                  {showPositionCreator ? 'Cancel' : '+ Add New'}
+                </button>
+              </div>
+
               <select
                 required
                 value={form.position_id}
@@ -365,7 +497,33 @@ export default function OfficersPage() {
                   </option>
                 ))}
               </select>
+
+              {showPositionCreator && (
+                <div className="mt-3 space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <input
+                    value={newPositionBn}
+                    onChange={(e) => setNewPositionBn(e.target.value)}
+                    placeholder="বাংলা পদবী — যেমন: সভাপতি"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    value={newPositionEn}
+                    onChange={(e) => setNewPositionEn(e.target.value)}
+                    placeholder="English designation — e.g. President"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    disabled={creatingOption}
+                    onClick={createPosition}
+                    className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    {creatingOption ? 'Adding...' : 'Add Designation'}
+                  </button>
+                </div>
+              )}
             </div>
+
           </div>
 
           <MediaPicker

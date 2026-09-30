@@ -8,10 +8,13 @@ use App\Http\Requests\Officer\UpdateOfficerRequest;
 use App\Http\Requests\Officer\VerifyOfficerRequest;
 use App\Http\Resources\OfficerProfileResource;
 use App\Models\OfficerProfile;
+use App\Models\Department;
+use App\Models\Position;
 use App\Models\OfficerVerificationHistory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Str;
 
 class OfficerController extends Controller
 {
@@ -103,6 +106,80 @@ class OfficerController extends Controller
             'message' => 'Officer profile updated successfully',
             'data' => new OfficerProfileResource($officer),
         ]);
+    }
+
+    /**
+     * Create a department from the member admin form.
+     */
+    public function storeDepartment(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name_bn' => ['required', 'string', 'max:255'],
+            'name_en' => ['required', 'string', 'max:255'],
+        ]);
+
+        $baseSlug = Str::slug($validated['name_en']);
+
+        if ($baseSlug === '') {
+            $baseSlug = 'department';
+        }
+
+        $slug = $baseSlug;
+        $counter = 2;
+
+        while (Department::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+
+        $department = Department::create([
+            'name_bn' => trim($validated['name_bn']),
+            'name_en' => trim($validated['name_en']),
+            'slug' => $slug,
+            'display_order' => 0,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Department created successfully',
+            'data' => $department,
+        ], 201);
+    }
+
+    /**
+     * Create a designation/position from the member admin form.
+     */
+    public function storePosition(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title_bn' => ['required', 'string', 'max:255'],
+            'title_en' => ['required', 'string', 'max:255'],
+        ]);
+
+        $baseSlug = Str::slug($validated['title_en']);
+
+        if ($baseSlug === '') {
+            $baseSlug = 'position';
+        }
+
+        $slug = $baseSlug;
+        $counter = 2;
+
+        while (Position::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+
+        $position = Position::create([
+            'title_bn' => trim($validated['title_bn']),
+            'title_en' => trim($validated['title_en']),
+            'slug' => $slug,
+            'display_order' => 0,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Designation created successfully',
+            'data' => $position,
+        ], 201);
     }
 
     /**
