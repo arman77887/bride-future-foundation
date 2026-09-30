@@ -20,10 +20,15 @@ interface ContentItem {
   cover_media_id?: string | null;
   cover_image_url?: string | null;
   created_at?: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  location_bn?: string | null;
+  location_en?: string | null;
 }
 
 interface HomepageContent {
   projects: ContentItem[];
+  events: ContentItem[];
   news: ContentItem[];
   notices: ContentItem[];
 }
@@ -222,36 +227,30 @@ async function getPublicStats(): Promise<PublicStats> {
 }
 
 async function getHomepageContent(): Promise<HomepageContent> {
-  try {
-    const [projectsRes, newsRes, noticesRes] = await Promise.all([
-      api.get('/projects'),
-      api.get('/news'),
-      api.get('/notices'),
-    ]);
+  const results = await Promise.allSettled([
+    api.get('/projects'),
+    api.get('/events'),
+    api.get('/news'),
+    api.get('/notices'),
+  ]);
 
-    const getItems = (response: any): ContentItem[] => {
-      const data = response?.data?.data;
+  const getItems = (result: PromiseSettledResult<any>): ContentItem[] => {
+    if (result.status !== 'fulfilled') return [];
 
-      if (Array.isArray(data)) return data;
-      if (Array.isArray(data?.data)) return data.data;
+    const data = result.value?.data?.data;
 
-      return [];
-    };
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data)) return data.data;
 
-    return {
-      projects: getItems(projectsRes),
-      news: getItems(newsRes),
-      notices: getItems(noticesRes),
-    };
-  } catch (error) {
-    console.error('Failed to load homepage content:', error);
+    return [];
+  };
 
-    return {
-      projects: [],
-      news: [],
-      notices: [],
-    };
-  }
+  return {
+    projects: getItems(results[0]),
+    events: getItems(results[1]),
+    news: getItems(results[2]),
+    notices: getItems(results[3]),
+  };
 }
 
 function resolveMediaUrl(url?: string | null) {
@@ -299,6 +298,8 @@ export default async function HomePage({
     0,
     cms?.metadata?.projects?.limit ?? 3,
   );
+
+  const eventItems = homepageContent.events.slice(0, 3);
 
   const newsItems = homepageContent.news.slice(
     0,
@@ -769,6 +770,96 @@ export default async function HomePage({
           </div>
         </div>
       </section>
+
+      {/* EVENTS */}
+      {eventItems.length > 0 && (
+        <section className="bg-emerald-950 text-white">
+          <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10">
+            <div className="border-b border-white/10 pb-5">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
+                {locale === 'bn' ? 'আসন্ন আয়োজন' : 'Events'}
+              </p>
+              <h2 className="mt-2 text-2xl font-black sm:text-3xl">
+                {locale === 'bn' ? 'ইভেন্ট ও আয়োজন' : 'Events & Activities'}
+              </h2>
+            </div>
+
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              {eventItems.map((item) => {
+                const title = localized(locale, item.title_bn, item.title_en);
+                const description = localized(
+                  locale,
+                  item.description_bn,
+                  item.description_en,
+                );
+                const location = localized(
+                  locale,
+                  item.location_bn ?? undefined,
+                  item.location_en ?? undefined,
+                );
+                const imageUrl = resolveMediaUrl(item.cover_image_url);
+
+                const eventDate = item.start_time
+                  ? new Intl.DateTimeFormat(
+                      locale === 'bn' ? 'bn-BD' : 'en-US',
+                      {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                      },
+                    ).format(new Date(item.start_time))
+                  : null;
+
+                return (
+                  <article
+                    key={item.id}
+                    className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06]"
+                  >
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={title}
+                        className="h-52 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-52 items-center justify-center bg-emerald-900 px-6 text-center">
+                        <span className="text-sm font-black uppercase tracking-[0.18em] text-emerald-200">
+                          {locale === 'bn' ? 'ব্রাইট ফিউচার ফাউন্ডেশন' : 'Bright Future Foundation'}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="p-6">
+                      {eventDate && (
+                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                          {eventDate}
+                        </p>
+                      )}
+
+                      <h3 className="mt-2 text-lg font-black text-white">
+                        {title}
+                      </h3>
+
+                      {location && (
+                        <p className="mt-2 text-sm font-semibold text-emerald-200">
+                          {location}
+                        </p>
+                      )}
+
+                      {description && (
+                        <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-300">
+                          {description}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* NEWS + NOTICES */}
       <section className="bg-gray-50">

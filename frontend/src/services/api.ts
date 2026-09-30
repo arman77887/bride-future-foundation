@@ -1,9 +1,18 @@
 import axios from 'axios';
 
+const publicApiBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'https://bff.crxhub.org/api/v1';
+
+const serverApiBaseUrl =
+  process.env.INTERNAL_API_BASE_URL ||
+  'http://127.0.0.1:8081/api/v1';
+
 export const api = axios.create({
   baseURL:
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'https://bff.crxhub.org/api/v1',
+    typeof window === 'undefined'
+      ? serverApiBaseUrl
+      : publicApiBaseUrl,
 
   headers: {
     'Content-Type': 'application/json',
