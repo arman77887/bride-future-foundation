@@ -200,6 +200,11 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
         'index'
     ]);
 
+    Route::get('/gallery/{slug}', [
+        GalleryController::class,
+        'show'
+    ]);
+
     Route::get('/public-documents', [
         PublicDocumentController::class,
         'index'

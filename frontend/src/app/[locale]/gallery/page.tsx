@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { api } from '@/services/api';
 import GalleryViewer, {
   type GalleryPhoto,
@@ -195,9 +196,20 @@ export default async function GalleryPage({
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-                              {albumTitle}
-                            </h2>
+                            <Link
+                              href={`/${locale}/gallery/${album.slug}`}
+                              className="group inline-flex items-center gap-2"
+                            >
+                              <h2 className="text-2xl font-bold tracking-tight text-gray-900 transition group-hover:text-emerald-700 sm:text-3xl">
+                                {albumTitle}
+                              </h2>
+                              <span
+                                aria-hidden="true"
+                                className="text-emerald-600 transition-transform group-hover:translate-x-1"
+                              >
+                                →
+                              </span>
+                            </Link>
 
                             <span className="w-fit rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600">
                               {photos.length}{' '}
@@ -224,6 +236,18 @@ export default async function GalleryPage({
                         photos={photos}
                         locale={locale}
                       />
+
+                      <div className="mt-5 flex justify-end">
+                        <Link
+                          href={`/${locale}/gallery/${album.slug}`}
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
+                        >
+                          {locale === 'bn'
+                            ? 'অ্যালবাম খুলুন'
+                            : 'View album'}
+                          <span aria-hidden="true">→</span>
+                        </Link>
+                      </div>
                     </div>
                   </article>
                 );

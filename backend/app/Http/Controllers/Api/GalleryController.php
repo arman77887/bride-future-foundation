@@ -26,6 +26,15 @@ class GalleryController extends Controller
         return GalleryAlbumResource::collection(GalleryAlbum::with('items')->latest()->paginate(15));
     }
 
+    public function show(string $slug): GalleryAlbumResource
+    {
+        $album = GalleryAlbum::with('items')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return new GalleryAlbumResource($album);
+    }
+
     public function store(StoreGalleryAlbumRequest $request): JsonResponse
     {
         $this->authorize('manage', GalleryAlbum::class);
