@@ -29,6 +29,16 @@ class ProjectController extends Controller
         );
     }
 
+    public function show(string $slug): ProjectResource
+    {
+        $project = Project::with('coverMedia')
+            ->where('slug', $slug)
+            ->where('status', 'ACTIVE')
+            ->firstOrFail();
+
+        return new ProjectResource($project);
+    }
+
     public function update(
         UpdateProjectRequest $request,
         string $id

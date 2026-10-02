@@ -40,6 +40,16 @@ class EventController extends Controller
         );
     }
 
+    public function show(string $slug): EventResource
+    {
+        $event = Event::with('coverMedia')
+            ->where('slug', $slug)
+            ->where('status', 'PUBLISHED')
+            ->firstOrFail();
+
+        return new EventResource($event);
+    }
+
     public function store(StoreEventRequest $request): JsonResponse
     {
         $this->authorize('manage', Event::class);

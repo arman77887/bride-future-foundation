@@ -185,9 +185,19 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
         'index'
     ]);
 
+    Route::get('/events/{slug}', [
+        EventController::class,
+        'show'
+    ]);
+
     Route::get('/projects', [
         ProjectController::class,
         'index'
+    ]);
+
+    Route::get('/projects/{slug}', [
+        ProjectController::class,
+        'show'
     ]);
 
     Route::get('/notices', [

@@ -1,9 +1,11 @@
+import Link from 'next/link';
 import { api } from '@/services/api';
 
 type Locale = 'bn' | 'en';
 
 interface Project {
   id: string;
+  slug?: string;
   title_bn?: string;
   title_en?: string;
   description_bn?: string;
@@ -89,13 +91,6 @@ export default async function ProjectsPage({
                 locale === 'bn' ? 'প্রকল্প' : 'Project',
               );
 
-              const description = localized(
-                locale,
-                item.description_bn,
-                item.description_en,
-                '',
-              );
-
               const imageUrl = resolveMediaUrl(
                 item.cover_image_url,
               );
@@ -106,11 +101,13 @@ export default async function ProjectsPage({
                   className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={title}
-                      className="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                    />
+                    <Link href={`/${locale}/projects/${item.slug}`}>
+                      <img
+                        src={imageUrl}
+                        alt={title}
+                        className="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                      />
+                    </Link>
                   ) : (
                     <div className="flex h-56 items-center justify-center bg-emerald-50 text-sm font-bold text-emerald-700">
                       {locale === 'bn'
@@ -121,14 +118,21 @@ export default async function ProjectsPage({
 
                   <div className="p-6">
                     <h2 className="text-xl font-black text-gray-900">
-                      {title}
+                      <Link
+                        href={`/${locale}/projects/${item.slug}`}
+                        className="transition hover:text-emerald-700"
+                      >
+                        {title}
+                      </Link>
                     </h2>
 
-                    {description && (
-                      <p className="mt-3 leading-7 text-gray-600">
-                        {description}
-                      </p>
-                    )}
+                    <Link
+                      href={`/${locale}/projects/${item.slug}`}
+                      className="mt-5 inline-flex font-bold text-emerald-700 transition hover:text-emerald-900"
+                    >
+                      {locale === 'bn' ? 'বিস্তারিত দেখুন →' : 'View details →'}
+                    </Link>
+
                   </div>
                 </article>
               );

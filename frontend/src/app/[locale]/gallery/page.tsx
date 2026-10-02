@@ -217,16 +217,7 @@ export default async function GalleryPage({
                             </span>
                           </div>
 
-                          {(album.description_bn ||
-                            album.description_en) && (
-                            <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600 sm:text-base">
-                              {localized(
-                                locale,
-                                album.description_bn,
-                                album.description_en,
-                              )}
-                            </p>
-                          )}
+
                         </div>
                       </div>
                     </div>
