@@ -11,7 +11,7 @@ class HealthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'message' => 'Bride Future Foundation API v1 is running successfully.',
+            'message' => 'Bright Future Foundation API v1 is running successfully.',
             'timestamp' => now()->toIso8601String(),
         ], 200);
     }

@@ -1,7 +1,7 @@
 {
     "name": "bride-future-foundation/bff-backend",
     "type": "project",
-    "description": "The backend REST API for Bride Future Foundation (BFF).",
+    "description": "The backend REST API for Bright Future Foundation (BFF).",
     "keywords": ["framework", "laravel", "bff"],
     "license": "MIT",
     "require": {

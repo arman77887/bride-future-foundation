@@ -8,7 +8,7 @@
 <body style="margin:0;padding:0;background:#f5f7fa;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
     <div style="max-width:620px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
         <div style="padding:24px;background:#166534;color:#ffffff;">
-            <h1 style="margin:0;font-size:24px;">Bride Future Foundation</h1>
+            <h1 style="margin:0;font-size:24px;">Bright Future Foundation</h1>
             <p style="margin:8px 0 0;font-size:14px;">New Update</p>
         </div>
 
@@ -35,7 +35,7 @@
 
         <div style="padding:20px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;">
             <p style="margin:0 0 8px;">
-                You are receiving this email because you subscribed to Bride Future Foundation updates.
+                You are receiving this email because you subscribed to Bright Future Foundation updates.
             </p>
             <p style="margin:0;">
                 <a href="{{ url('/api/v1/subscriptions/unsubscribe/' . $subscriber->unsubscribe_token) }}"
