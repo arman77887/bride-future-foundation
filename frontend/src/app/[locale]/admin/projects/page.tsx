@@ -44,6 +44,8 @@ export default function ProjectsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const loadProjects = async () => {
     try {
@@ -92,6 +94,8 @@ export default function ProjectsPage() {
 
   const editProject = (item: ProjectItem) => {
     setEditingId(item.id);
+    setFormOpen(true);
+    setOpenMenuId(null);
 
     setForm({
       title_bn: item.title_bn || '',
@@ -134,6 +138,8 @@ export default function ProjectsPage() {
       }
 
       resetForm();
+      setFormOpen(false);
+      setOpenMenuId(null);
       await loadProjects();
     } catch (err: any) {
       const validation = err?.response?.data?.errors;
@@ -189,287 +195,388 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Project Management
-        </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Create, edit, delete and manage project cover images.
-        </p>
-      </div>
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
+              Content Management
+            </span>
+
+            <h1 className="mt-3 text-2xl font-black text-gray-950 sm:text-3xl">
+              Project Management
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Create and manage foundation projects and cover images.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              resetForm();
+              setFormOpen(true);
+              setOpenMenuId(null);
+              setMessage('');
+              setError('');
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"
+          >
+            <span className="text-xl leading-none">+</span>
+            Add New Project
+          </button>
+        </div>
+      </section>
 
       {(message || error) && (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
+          className={`rounded-xl border px-4 py-3 text-sm font-medium ${
             error
               ? 'border-red-200 bg-red-50 text-red-700'
-              : 'border-green-200 bg-green-50 text-green-700'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-700'
           }`}
         >
           {error || message}
         </div>
       )}
 
-      <form
-        onSubmit={saveProject}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-      >
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {editingId ? 'Edit Project' : 'Create Project'}
-            </h2>
+      {formOpen && (
+        <form
+          onSubmit={saveProject}
+          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7"
+        >
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-black text-gray-900">
+                {editingId ? 'Edit Project' : 'Add New Project'}
+              </h2>
 
-            <p className="text-sm text-gray-500">
-              {editingId
-                ? 'Update the selected project.'
-                : 'Add a new project.'}
-            </p>
-          </div>
+              <p className="mt-1 text-sm text-gray-500">
+                {editingId
+                  ? 'Update the selected project.'
+                  : 'Enter the project information below.'}
+              </p>
+            </div>
 
-          {editingId && (
             <button
               type="button"
-              onClick={resetForm}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => {
+                resetForm();
+                setFormOpen(false);
+                setOpenMenuId(null);
+              }}
+              className="self-start rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
             >
-              Cancel Edit
+              Close
             </button>
-          )}
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Title (Bangla)
-            </label>
-
-            <input
-              value={form.title_bn}
-              onChange={(e) =>
-                updateField('title_bn', e.target.value)
-              }
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-emerald-500"
-              placeholder="প্রকল্পের শিরোনাম"
-            />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Title (English)
-            </label>
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Title (Bangla)
+              </label>
 
-            <input
-              value={form.title_en}
-              onChange={(e) =>
-                updateField('title_en', e.target.value)
-              }
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-emerald-500"
-              placeholder="Project title"
-            />
+              <input
+                value={form.title_bn}
+                onChange={(e) => updateField('title_bn', e.target.value)}
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="প্রকল্পের শিরোনাম"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Title (English)
+              </label>
+
+              <input
+                value={form.title_en}
+                onChange={(e) => updateField('title_en', e.target.value)}
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Project title"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Slug
+              </label>
+
+              <input
+                value={form.slug}
+                onChange={(e) => updateField('slug', e.target.value)}
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="project-slug"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Status
+              </label>
+
+              <select
+                value={form.status}
+                onChange={(e) => updateField('status', e.target.value)}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="ARCHIVED">Archived</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Description (Bangla)
+              </label>
+
+              <textarea
+                value={form.description_bn}
+                onChange={(e) =>
+                  updateField('description_bn', e.target.value)
+                }
+                rows={7}
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="প্রকল্পের বিস্তারিত বিবরণ"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                Description (English)
+              </label>
+
+              <textarea
+                value={form.description_en}
+                onChange={(e) =>
+                  updateField('description_en', e.target.value)
+                }
+                rows={7}
+                required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Full project description"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <MediaPicker
+                value={form.cover_media_id}
+                existingUrl={
+                  editingId
+                    ? items.find((item) => item.id === editingId)
+                        ?.cover_image_url || null
+                    : null
+                }
+                onChange={(mediaId) =>
+                  updateField('cover_media_id', mediaId)
+                }
+                label="Project Cover Image"
+                mediaType="cover"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Slug
-            </label>
-
-            <input
-              value={form.slug}
-              onChange={(e) =>
-                updateField('slug', e.target.value)
-              }
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-emerald-500"
-              placeholder="project-slug"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Status
-            </label>
-
-            <select
-              value={form.status}
-              onChange={(e) =>
-                updateField('status', e.target.value)
-              }
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 outline-none focus:border-emerald-500"
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <option value="ACTIVE">Active</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="ARCHIVED">Archived</option>
-            </select>
-          </div>
+              {saving
+                ? 'Saving...'
+                : editingId
+                  ? 'Update Project'
+                  : 'Create Project'}
+            </button>
 
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Description (Bangla)
-            </label>
-
-            <textarea
-              value={form.description_bn}
-              onChange={(e) =>
-                updateField(
-                  'description_bn',
-                  e.target.value
-                )
-              }
-              rows={8}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-emerald-500"
-              placeholder="প্রকল্পের বিস্তারিত বিবরণ"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Description (English)
-            </label>
-
-            <textarea
-              value={form.description_en}
-              onChange={(e) =>
-                updateField(
-                  'description_en',
-                  e.target.value
-                )
-              }
-              rows={8}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-emerald-500"
-              placeholder="Full project description"
-            />
-          </div>
-
-          <MediaPicker
-            value={form.cover_media_id}
-            onChange={(mediaId) =>
-              updateField('cover_media_id', mediaId)
-            }
-            label="Project Cover Image"
-          />
-        </div>
-
-        <div className="mt-6 flex gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {saving
-              ? 'Saving...'
-              : editingId
-                ? 'Update Project'
-                : 'Create Project'}
-          </button>
-
-          {editingId && (
             <button
               type="button"
-              onClick={resetForm}
-              className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              onClick={() => {
+                resetForm();
+                setFormOpen(false);
+                setOpenMenuId(null);
+              }}
+              disabled={saving}
+              className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
-              Clear
+              Cancel
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+      <section className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-6 py-5">
+          <h2 className="text-lg font-bold text-gray-900">
             Existing Projects
           </h2>
+
+          <p className="mt-1 text-xs text-gray-500">
+            {items.length} project{items.length === 1 ? '' : 's'}
+          </p>
         </div>
 
         {loading ? (
-          <div className="p-6 text-sm text-gray-500">
+          <div className="p-8 text-sm text-gray-500">
             Loading projects...
           </div>
         ) : items.length === 0 ? (
-          <div className="p-6 text-sm text-gray-500">
-            No projects found.
+          <div className="p-10 text-center">
+            <p className="font-semibold text-gray-700">
+              No projects found.
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Use Add New Project to create the first project.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/80">
+                  <th className="w-20 px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    #
+                  </th>
+
+                  <th className="w-28 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Image
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Project
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Status
                   </th>
 
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Actions
+                  <th className="w-20 px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Action
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {items.map((item) => (
-                  <tr key={item.id}>
+              <tbody className="divide-y divide-gray-100">
+                {items.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    className="transition hover:bg-gray-50/80"
+                  >
                     <td className="px-6 py-4">
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-gray-100 px-2 text-xs font-bold text-gray-500">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-4">
                       {item.cover_image_url ? (
                         <img
                           src={item.cover_image_url}
-                          alt={item.title_en}
-                          className="h-16 w-24 rounded-lg object-cover"
+                          alt={item.title_en || item.title_bn}
+                          className="h-14 w-20 rounded-xl border border-gray-100 object-cover shadow-sm"
                         />
                       ) : (
-                        <div className="flex h-16 w-24 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
+                        <div className="flex h-14 w-20 items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-[10px] font-medium text-gray-400">
                           No image
                         </div>
                       )}
                     </td>
 
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {item.title_en}
-                      </div>
+                    <td className="px-4 py-4">
+                      <div className="max-w-xl">
+                        <p className="font-bold text-gray-900">
+                          {item.title_en || 'Untitled'}
+                        </p>
 
-                      <div className="mt-1 text-sm text-gray-500">
-                        {item.title_bn}
+                        <p className="mt-1 line-clamp-1 text-sm text-gray-500">
+                          {item.title_bn || '—'}
+                        </p>
+
+                        <p className="mt-1 font-mono text-[11px] text-gray-400">
+                          /{item.slug}
+                        </p>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4">
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                          item.status === 'ACTIVE'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : item.status === 'COMPLETED'
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            item.status === 'ACTIVE'
+                              ? 'bg-emerald-500'
+                              : item.status === 'COMPLETED'
+                                ? 'bg-blue-500'
+                                : 'bg-gray-400'
+                          }`}
+                        />
+
                         {item.status || 'ACTIVE'}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => editProject(item)}
-                          className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
-                        >
-                          Edit
-                        </button>
+                    <td className="relative px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        aria-label="Project actions"
+                        onClick={() =>
+                          setOpenMenuId((current) =>
+                            current === item.id ? null : item.id
+                          )
+                        }
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                      >
+                        ⋮
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            deleteProject(item.id)
-                          }
-                          className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      {openMenuId === item.id && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Close project actions"
+                            onClick={() => setOpenMenuId(null)}
+                            className="fixed inset-0 z-20 cursor-default"
+                          />
+
+                          <div className="absolute right-6 top-14 z-30 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 text-left shadow-xl">
+                            <button
+                              type="button"
+                              onClick={() => editProject(item)}
+                              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                            >
+                              <span>✎</span>
+                              Edit
+                            </button>
+
+                            <div className="my-1 border-t border-gray-100" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                deleteProject(item.id);
+                              }}
+                              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                            >
+                              <span>⌫</span>
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -477,7 +584,7 @@ export default function ProjectsPage() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

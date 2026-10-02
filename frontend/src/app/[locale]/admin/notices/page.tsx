@@ -44,6 +44,8 @@ export default function NoticesPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const loadNotices = async () => {
     try {
@@ -92,6 +94,8 @@ export default function NoticesPage() {
 
   const editNotice = (item: NoticeItem) => {
     setEditingId(item.id);
+    setFormOpen(true);
+    setOpenMenuId(null);
 
     setForm({
       title_bn: item.title_bn || '',
@@ -137,6 +141,8 @@ export default function NoticesPage() {
       }
 
       resetForm();
+      setFormOpen(false);
+      setOpenMenuId(null);
       await loadNotices();
     } catch (err: any) {
       const validation = err?.response?.data?.errors;
@@ -192,14 +198,35 @@ export default function NoticesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Notice Management
-        </h1>
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
+              Content Management
+            </span>
 
-        <p className="mt-1 text-sm text-gray-600">
-          Create, edit, delete and manage notice cover images.
-        </p>
+            <h1 className="mt-3 text-2xl font-black text-gray-950 sm:text-3xl">
+              Notice Management
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Create and manage foundation notices and announcements.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              resetForm();
+              setFormOpen(true);
+              setOpenMenuId(null);
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"
+          >
+            <span className="text-xl leading-none">+</span>
+            Add New Notice
+          </button>
+        </div>
       </div>
 
       {(message || error) && (
@@ -214,9 +241,11 @@ export default function NoticesPage() {
         </div>
       )}
 
+      {formOpen && (
+        <div>
       <form
         onSubmit={saveNotice}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7"
       >
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
@@ -234,7 +263,11 @@ export default function NoticesPage() {
           {editingId && (
             <button
               type="button"
-              onClick={resetForm}
+              onClick={() => {
+                resetForm();
+                setFormOpen(false);
+                setOpenMenuId(null);
+              }}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel Edit
@@ -376,7 +409,11 @@ export default function NoticesPage() {
           {editingId && (
             <button
               type="button"
-              onClick={resetForm}
+              onClick={() => {
+                resetForm();
+                setFormOpen(false);
+                setOpenMenuId(null);
+              }}
               className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
             >
               Clear
@@ -384,6 +421,8 @@ export default function NoticesPage() {
           )}
         </div>
       </form>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-200 px-6 py-4">
@@ -402,92 +441,145 @@ export default function NoticesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/80">
+                  <th className="w-20 px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    #
+                  </th>
+                  <th className="w-28 px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Image
                   </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Notice
                   </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Expires
                   </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     Status
                   </th>
-
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Actions
+                  <th className="w-20 px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Action
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {items.map((item) => (
-                  <tr key={item.id}>
+              <tbody className="divide-y divide-gray-100">
+                {items.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    className="group transition hover:bg-gray-50/80"
+                  >
                     <td className="px-6 py-4">
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-gray-100 px-2 text-xs font-bold text-gray-500">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-4">
                       {item.cover_image_url ? (
                         <img
                           src={item.cover_image_url}
-                          alt={item.title_en}
-                          className="h-16 w-24 rounded-lg object-cover"
+                          alt={item.title_en || item.title_bn}
+                          className="h-14 w-20 rounded-xl border border-gray-100 object-cover shadow-sm"
                         />
                       ) : (
-                        <div className="flex h-16 w-24 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
+                        <div className="flex h-14 w-20 items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-[10px] font-medium text-gray-400">
                           No image
                         </div>
                       )}
                     </td>
 
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {item.title_en}
-                      </div>
-
-                      <div className="mt-1 text-sm text-gray-500">
-                        {item.title_bn}
+                    <td className="px-4 py-4">
+                      <div className="max-w-xl">
+                        <p className="font-bold text-gray-900">
+                          {item.title_en || 'Untitled'}
+                        </p>
+                        <p className="mt-1 line-clamp-1 text-sm text-gray-500">
+                          {item.title_bn || '—'}
+                        </p>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-600">
                       {item.expires_at
-                        ? new Date(
-                            item.expires_at
-                          ).toLocaleString()
+                        ? new Date(item.expires_at).toLocaleString()
                         : 'No expiry'}
                     </td>
 
-                    <td className="px-6 py-4">
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                          item.status === 'PUBLISHED'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : item.status === 'ARCHIVED'
+                              ? 'bg-gray-100 text-gray-600'
+                              : 'bg-amber-50 text-amber-700'
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            item.status === 'PUBLISHED'
+                              ? 'bg-emerald-500'
+                              : item.status === 'ARCHIVED'
+                                ? 'bg-gray-400'
+                                : 'bg-amber-500'
+                          }`}
+                        />
                         {item.status || 'DRAFT'}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => editNotice(item)}
-                          className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
-                        >
-                          Edit
-                        </button>
+                    <td className="relative px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        aria-label="Notice actions"
+                        onClick={() =>
+                          setOpenMenuId((current) =>
+                            current === item.id ? null : item.id
+                          )
+                        }
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                      >
+                        ⋮
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            deleteNotice(item.id)
-                          }
-                          className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      {openMenuId === item.id && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Close actions menu"
+                            onClick={() => setOpenMenuId(null)}
+                            className="fixed inset-0 z-20 cursor-default"
+                          />
+
+                          <div className="absolute right-6 top-14 z-30 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 text-left shadow-xl">
+                            <button
+                              type="button"
+                              onClick={() => editNotice(item)}
+                              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                            >
+                              <span>✎</span>
+                              Edit
+                            </button>
+
+                            <div className="my-1 border-t border-gray-100" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                deleteNotice(item.id);
+                              }}
+                              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                            >
+                              <span>⌫</span>
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

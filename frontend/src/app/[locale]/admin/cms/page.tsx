@@ -392,6 +392,7 @@ export default function CmsPageAdmin() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     slug: '',
@@ -663,6 +664,7 @@ export default function CmsPageAdmin() {
 
   const handleCreate = () => {
     setEditingId(null);
+    setOpenMenuId(null);
     setForm({
       slug: '',
       title_bn: '',
@@ -682,6 +684,7 @@ export default function CmsPageAdmin() {
 
   const handleEdit = (page: CmsPage) => {
     setEditingId(page.id);
+    setOpenMenuId(null);
 
     setForm({
       slug: page.slug,
@@ -1633,15 +1636,20 @@ export default function CmsPageAdmin() {
       )}
 
       {/* NORMAL CMS PAGES */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <section className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-5 border-b border-gray-100 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-gray-900">
+            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
+              {isBn ? 'কনটেন্ট ম্যানেজমেন্ট' : 'Content Management'}
+            </span>
+
+            <h2 className="mt-3 text-xl font-black text-gray-900 sm:text-2xl">
               {isBn ? 'অন্যান্য CMS পেজ' : 'Other CMS Pages'}
             </h2>
+
             <p className="mt-1 text-sm text-gray-500">
               {isBn
-                ? 'About, Contact ইত্যাদি সাধারণ CMS পেজ পরিচালনা করুন।'
+                ? 'About, Contact এবং অন্যান্য সাধারণ CMS পেজ পরিচালনা করুন।'
                 : 'Manage regular CMS pages such as About and Contact.'}
             </p>
           </div>
@@ -1649,65 +1657,175 @@ export default function CmsPageAdmin() {
           <button
             type="button"
             onClick={handleCreate}
-            className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"
           >
-            + {isBn ? 'নতুন পেজ' : 'New Page'}
+            <span className="text-xl leading-none">+</span>
+            {isBn ? 'নতুন CMS পেজ' : 'Add New CMS Page'}
           </button>
         </div>
 
+        <div className="border-b border-gray-100 px-6 py-4">
+          <p className="text-xs font-semibold text-gray-500">
+            {pages.length} {isBn ? 'টি পেজ' : `page${pages.length === 1 ? '' : 's'}`}
+          </p>
+        </div>
+
         {pages.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-            {isBn ? 'কোনো CMS পেজ নেই।' : 'No CMS pages found.'}
+          <div className="p-10 text-center">
+            <p className="font-semibold text-gray-700">
+              {isBn ? 'কোনো CMS পেজ নেই।' : 'No CMS pages found.'}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              {isBn
+                ? 'নতুন CMS পেজ যোগ করতে উপরের বাটন ব্যবহার করুন।'
+                : 'Use Add New CMS Page to create the first page.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left">
+            <table className="min-w-full">
               <thead>
-                <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                  <th className="px-4 py-3">Title</th>
-                  <th className="px-4 py-3">Slug</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                <tr className="border-b border-gray-100 bg-gray-50/80">
+                  <th className="w-20 px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    #
+                  </th>
+
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    {isBn ? 'পেজ' : 'Page'}
+                  </th>
+
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Slug
+                  </th>
+
+                  <th className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Status
+                  </th>
+
+                  <th className="w-20 px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-gray-400">
+                    {isBn ? 'অ্যাকশন' : 'Action'}
+                  </th>
                 </tr>
               </thead>
 
-              <tbody>
-                {pages.map((page) => (
+              <tbody className="divide-y divide-gray-100">
+                {pages.map((page, index) => (
                   <tr
                     key={page.id}
-                    className="border-b border-gray-100 last:border-0"
+                    className="transition hover:bg-gray-50/80"
                   >
-                    <td className="px-4 py-4 font-semibold">
-                      {isBn ? page.title_bn : page.title_en}
+                    <td className="px-6 py-4">
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-gray-100 px-2 text-xs font-bold text-gray-500">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {page.slug}
-                    </td>
+
                     <td className="px-4 py-4">
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold">
+                      <div className="max-w-xl">
+                        <p className="font-bold text-gray-900">
+                          {isBn
+                            ? page.title_bn || page.title_en || 'Untitled'
+                            : page.title_en || page.title_bn || 'Untitled'}
+                        </p>
+
+                        <p className="mt-1 line-clamp-1 text-sm text-gray-500">
+                          {isBn
+                            ? page.title_en || '—'
+                            : page.title_bn || '—'}
+                        </p>
+
+                        {page.slug === 'homepage' && (
+                          <span className="mt-2 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                            Homepage
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <code className="rounded-lg bg-gray-50 px-2.5 py-1.5 text-xs text-gray-500">
+                        /{page.slug}
+                      </code>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                          page.status === 'PUBLISHED'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : page.status === 'DRAFT'
+                              ? 'bg-amber-50 text-amber-700'
+                              : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            page.status === 'PUBLISHED'
+                              ? 'bg-emerald-500'
+                              : page.status === 'DRAFT'
+                                ? 'bg-amber-500'
+                                : 'bg-gray-400'
+                          }`}
+                        />
+
                         {page.status}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(page)}
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold hover:bg-gray-50"
-                        >
-                          {isBn ? 'Edit' : 'Edit'}
-                        </button>
 
-                        {page.slug !== 'homepage' && (
+                    <td className="relative px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        aria-label="CMS page actions"
+                        onClick={() =>
+                          setOpenMenuId((current) =>
+                            current === page.id ? null : page.id
+                          )
+                        }
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                      >
+                        ⋮
+                      </button>
+
+                      {openMenuId === page.id && (
+                        <>
                           <button
                             type="button"
-                            onClick={() => handleDelete(page)}
-                            className="rounded-lg border border-red-200 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
-                          >
-                            {isBn ? 'Delete' : 'Delete'}
-                          </button>
-                        )}
-                      </div>
+                            aria-label="Close CMS page actions"
+                            onClick={() => setOpenMenuId(null)}
+                            className="fixed inset-0 z-20 cursor-default"
+                          />
+
+                          <div className="absolute right-6 top-14 z-30 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 text-left shadow-xl">
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(page)}
+                              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                            >
+                              <span>✎</span>
+                              {isBn ? 'সম্পাদনা' : 'Edit'}
+                            </button>
+
+                            {page.slug !== 'homepage' && (
+                              <>
+                                <div className="my-1 border-t border-gray-100" />
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    handleDelete(page);
+                                  }}
+                                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                                >
+                                  <span>⌫</span>
+                                  {isBn ? 'মুছে ফেলুন' : 'Delete'}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

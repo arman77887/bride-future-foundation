@@ -373,45 +373,64 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-black text-gray-950">
-          Website Settings
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          ওয়েবসাইটের নাম, Logo এবং Homepage Cover Photo পরিচালনা করুন।
-        </p>
-      </div>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="p-6 sm:p-7">
+          <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
+            System Configuration
+          </span>
+
+          <h1 className="mt-3 text-2xl font-black text-gray-950 sm:text-3xl">
+            Website Settings
+          </h1>
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+            ওয়েবসাইটের নাম, branding, contact information এবং social media
+            পরিচালনা করুন।
+          </p>
+        </div>
+      </section>
 
       {message && (
-        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           {message}
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="rounded-2xl bg-white p-10 text-center text-gray-500 shadow-sm">
+        <div className="flex items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white p-12 text-sm text-gray-500 shadow-sm">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-emerald-600" />
           Loading settings...
         </div>
       ) : (
         <>
-          <section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-black text-gray-950">
-                Website Name
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                পুরো ওয়েবসাইটে ব্যবহৃত English ও বাংলা নাম এখান থেকে পরিবর্তন করুন।
-              </p>
+          {/* GENERAL */}
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-6 py-5 sm:px-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-lg">
+                  ⚙
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-gray-950">
+                    General Information
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    ওয়েবসাইটের English ও বাংলা নাম পরিচালনা করুন।
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-5 p-6 sm:p-7 md:grid-cols-2">
               <div>
                 <label
                   htmlFor="site-name-en"
@@ -419,6 +438,7 @@ export default function SettingsPage() {
                 >
                   English Site Name
                 </label>
+
                 <input
                   id="site-name-en"
                   type="text"
@@ -436,6 +456,7 @@ export default function SettingsPage() {
                 >
                   বাংলা Site Name
                 </label>
+
                 <input
                   id="site-name-bn"
                   type="text"
@@ -448,62 +469,101 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-black text-gray-950">
-                Website Logo
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Navbar এবং অন্যান্য জায়গায় ব্যবহারের জন্য Logo নির্বাচন করুন।
-              </p>
+          {/* BRANDING */}
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-6 py-5 sm:px-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-lg">
+                  ◈
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-gray-950">
+                    Branding & Media
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Website Logo এবং Homepage Cover Photo পরিচালনা করুন।
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <MediaPicker
-              value={logoMediaId}
-              existingUrl={logoUrl}
-              onChange={setLogoMediaId}
-              label="Logo"
-              mediaType="logo"
-            />
+            <div className="grid gap-6 p-6 sm:p-7 xl:grid-cols-2">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-5">
+                <div className="mb-5">
+                  <h3 className="font-black text-gray-900">
+                    Website Logo
+                  </h3>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Navbar এবং অন্যান্য জায়গায় ব্যবহারের জন্য Logo নির্বাচন করুন।
+                  </p>
+                </div>
+
+                <MediaPicker
+                  value={logoMediaId}
+                  existingUrl={logoUrl}
+                  onChange={setLogoMediaId}
+                  label="Logo"
+                  mediaType="logo"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-5">
+                <div className="mb-5">
+                  <h3 className="font-black text-gray-900">
+                    Homepage Cover Photo
+                  </h3>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Homepage-এর প্রধান Cover Photo নির্বাচন করুন।
+                  </p>
+                </div>
+
+                <MediaPicker
+                  value={coverMediaId}
+                  existingUrl={coverUrl}
+                  onChange={setCoverMediaId}
+                  label="Homepage Cover Photo"
+                  mediaType="cover"
+                />
+              </div>
+            </div>
           </section>
 
-          <section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-black text-gray-950">
-                Homepage Cover Photo
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Homepage-এর প্রধান Cover Photo নির্বাচন করুন।
-              </p>
+          {/* CONTACT */}
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-6 py-5 sm:px-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-lg">
+                  ☎
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-gray-950">
+                    Contact Settings
+                  </h2>
+
+                  <p className="mt-1 max-w-3xl text-sm leading-6 text-gray-500">
+                    Contact page-এর ঠিকানা, ফোন, email, office hours, Google
+                    Maps এবং Contact Form receiving email পরিচালনা করুন।
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <MediaPicker
-              value={coverMediaId}
-              existingUrl={coverUrl}
-              onChange={setCoverMediaId}
-              label="Homepage Cover Photo"
-              mediaType="cover"
-            />
-          </section>
-
-          <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-            <div className="mb-6">
-              <h2 className="text-xl font-black text-gray-950">Contact Settings</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Contact page-এর ঠিকানা, ফোন, email, office hours, map এবং Contact Form-এর receiving email পরিচালনা করুন।
-              </p>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-5 p-6 sm:p-7 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Address (বাংলা)
                 </label>
+
                 <textarea
                   value={contactAddressBn}
                   onChange={(e) => setContactAddressBn(e.target.value)}
                   rows={3}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="বাংলায় ঠিকানা"
                 />
               </div>
@@ -512,11 +572,12 @@ export default function SettingsPage() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Address (English)
                 </label>
+
                 <textarea
                   value={contactAddressEn}
                   onChange={(e) => setContactAddressEn(e.target.value)}
                   rows={3}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="Address in English"
                 />
               </div>
@@ -525,11 +586,12 @@ export default function SettingsPage() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Phone
                 </label>
+
                 <input
                   type="text"
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="+880..."
                 />
               </div>
@@ -538,15 +600,17 @@ export default function SettingsPage() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Contact Form Receiving Email
                 </label>
+
                 <input
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="example@gmail.com"
                 />
-                <p className="mt-1.5 text-xs text-gray-500">
-                  Contact Form-এর message এই email-এ যাবে।
+
+                <p className="mt-1.5 text-xs leading-5 text-gray-500">
+                  Contact Form-এর message এই email address-এ যাবে।
                 </p>
               </div>
 
@@ -554,11 +618,12 @@ export default function SettingsPage() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Office Hours (বাংলা)
                 </label>
+
                 <input
                   type="text"
                   value={contactOfficeHoursBn}
                   onChange={(e) => setContactOfficeHoursBn(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="রবি–বৃহস্পতি: সকাল ৯টা – বিকেল ৫টা"
                 />
               </div>
@@ -567,11 +632,12 @@ export default function SettingsPage() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Office Hours (English)
                 </label>
+
                 <input
                   type="text"
                   value={contactOfficeHoursEn}
                   onChange={(e) => setContactOfficeHoursEn(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="Sunday–Thursday: 9:00 AM – 5:00 PM"
                 />
               </div>
@@ -580,28 +646,40 @@ export default function SettingsPage() {
                 <label className="mb-2 block text-sm font-bold text-gray-700">
                   Google Maps URL
                 </label>
+
                 <input
                   type="url"
                   value={contactMapUrl}
                   onChange={(e) => setContactMapUrl(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                   placeholder="https://maps.google.com/..."
                 />
               </div>
             </div>
           </section>
 
-          <section className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-black text-gray-950">
-                Social Media
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Facebook, X, TikTok এবং YouTube-এর official profile/channel URL এখান থেকে পরিবর্তন করুন।
-              </p>
+          {/* SOCIAL */}
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-6 py-5 sm:px-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-lg">
+                  ↗
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-black text-gray-950">
+                    Social Media
+                  </h2>
+
+                  <p className="mt-1 text-sm leading-6 text-gray-500">
+                    Foundation-এর official social media profile এবং channel
+                    URL পরিচালনা করুন।
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-5 p-6 sm:p-7 md:grid-cols-2">
               <div>
                 <label
                   htmlFor="social-facebook"
@@ -609,13 +687,14 @@ export default function SettingsPage() {
                 >
                   Facebook
                 </label>
+
                 <input
                   id="social-facebook"
                   type="url"
                   value={socialFacebook}
                   onChange={(e) => setSocialFacebook(e.target.value)}
                   placeholder="https://www.facebook.com/..."
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 />
               </div>
 
@@ -626,13 +705,14 @@ export default function SettingsPage() {
                 >
                   X (Twitter)
                 </label>
+
                 <input
                   id="social-x"
                   type="url"
                   value={socialX}
                   onChange={(e) => setSocialX(e.target.value)}
                   placeholder="https://x.com/..."
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 />
               </div>
 
@@ -643,13 +723,14 @@ export default function SettingsPage() {
                 >
                   TikTok
                 </label>
+
                 <input
                   id="social-tiktok"
                   type="url"
                   value={socialTiktok}
                   onChange={(e) => setSocialTiktok(e.target.value)}
                   placeholder="https://www.tiktok.com/@..."
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 />
               </div>
 
@@ -660,28 +741,46 @@ export default function SettingsPage() {
                 >
                   YouTube
                 </label>
+
                 <input
                   id="social-youtube"
                   type="url"
                   value={socialYoutube}
                   onChange={(e) => setSocialYoutube(e.target.value)}
                   placeholder="https://www.youtube.com/@..."
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
                 />
               </div>
             </div>
           </section>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={saveAllSettings}
-              disabled={saving}
-              className="bff-button rounded-xl bg-emerald-700 px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
+          {/* SAVE */}
+          <section className="sticky bottom-4 z-10 rounded-2xl border border-gray-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold text-gray-900">
+                  Save website configuration
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  পরিবর্তনগুলো public website-এ প্রয়োগ করতে Save Settings চাপুন।
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={saveAllSettings}
+                disabled={saving}
+                className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-7 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving && (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                )}
+
+                {saving ? 'Saving...' : 'Save Settings'}
+              </button>
+            </div>
+          </section>
         </>
       )}
     </div>

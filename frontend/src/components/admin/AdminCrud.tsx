@@ -30,6 +30,7 @@ export default function AdminCrud({
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState<any | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const emptyForm = Object.fromEntries(
     fields.map((field) => [field, ''])
@@ -77,6 +78,7 @@ export default function AdminCrud({
     setForm(emptyForm);
     setMessage('');
     setError('');
+    setOpenMenuId(null);
     setShowForm(true);
   };
 
@@ -94,6 +96,7 @@ export default function AdminCrud({
     setForm(nextForm);
     setMessage('');
     setError('');
+    setOpenMenuId(null);
     setShowForm(true);
   };
 
@@ -170,37 +173,44 @@ export default function AdminCrud({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {title}
-          </h1>
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
+              Content Management
+            </span>
 
-          <p className="mt-1 text-sm text-gray-500">
-            {titleBn}
-          </p>
+            <h1 className="mt-3 text-2xl font-black text-gray-950 sm:text-3xl">
+              {title}
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              {titleBn}
+            </p>
+          </div>
+
+          {createEnabled && (
+            <button
+              type="button"
+              onClick={startCreate}
+              disabled={saving || Boolean(deletingId)}
+              className={`${buttonBase} inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-800`}
+            >
+              <span className="text-xl leading-none">+</span>
+              Add New
+            </button>
+          )}
         </div>
-
-        {createEnabled && (
-          <button
-            type="button"
-            onClick={startCreate}
-            disabled={saving || Boolean(deletingId)}
-            className={`${buttonBase} rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 hover:shadow-md`}
-          >
-            + Add {title}
-          </button>
-        )}
-      </div>
+      </section>
 
       {message && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
           {message}
         </div>
       )}
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {error}
         </div>
       )}
@@ -208,19 +218,31 @@ export default function AdminCrud({
       {showForm && (
         <form
           onSubmit={submit}
-          className="rounded-xl bg-white p-6 shadow-sm"
+          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7"
         >
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
-              {editing ? `Edit ${title}` : `Create ${title}`}
-            </h2>
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black text-gray-900">
+                {editing ? `Edit ${title}` : `Add New ${title}`}
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                {editing
+                  ? 'Update the selected record.'
+                  : 'Enter the information below to create a new record.'}
+              </p>
+            </div>
 
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setEditing(null);
+                setOpenMenuId(null);
+              }}
               disabled={saving}
               aria-label="Close"
-              className={`${buttonBase} rounded-md px-2 py-1 text-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900`}
+              className={`${buttonBase} inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50`}
             >
               ✕
             </button>
@@ -228,43 +250,58 @@ export default function AdminCrud({
 
           <div className="grid gap-5 md:grid-cols-2">
             {fields.map((field) => (
-              <div key={field}>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+              <div
+                key={field}
+                className={
+                  field.includes('description') ||
+                  field.includes('content')
+                    ? 'md:col-span-2'
+                    : ''
+                }
+              >
+                <label className="mb-2 block text-sm font-semibold capitalize text-gray-700">
                   {field.replace(/_/g, ' ')}
                 </label>
 
-                <textarea
-                  value={form[field] ?? ''}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      [field]: e.target.value,
-                    })
-                  }
-                  disabled={saving}
-                  rows={
-                    field.includes('description') ||
-                    field.includes('content')
-                      ? 4
-                      : 2
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition duration-150 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-gray-50"
-                />
+                {field.includes('description') ||
+                field.includes('content') ? (
+                  <textarea
+                    value={form[field] ?? ''}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        [field]: e.target.value,
+                      })
+                    }
+                    disabled={saving}
+                    rows={5}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-gray-50"
+                  />
+                ) : (
+                  <input
+                    value={form[field] ?? ''}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        [field]: e.target.value,
+                      })
+                    }
+                    disabled={saving}
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-gray-50"
+                  />
+                )}
               </div>
             ))}
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="submit"
               disabled={saving}
-              className={`${buttonBase} inline-flex min-w-[110px] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 hover:shadow-md`}
+              className={`${buttonBase} inline-flex min-w-[120px] items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800`}
             >
               {saving && (
-                <span
-                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-                  aria-hidden="true"
-                />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
               )}
 
               {saving
@@ -278,9 +315,13 @@ export default function AdminCrud({
 
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setEditing(null);
+                setOpenMenuId(null);
+              }}
               disabled={saving}
-              className={`${buttonBase} rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-sm`}
+              className={`${buttonBase} rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50`}
             >
               Cancel
             </button>
@@ -288,111 +329,150 @@ export default function AdminCrud({
         </form>
       )}
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+      <section className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-6 py-5">
+          <h2 className="text-lg font-bold text-gray-900">
+            Existing Records
+          </h2>
+
+          <p className="mt-1 text-xs text-gray-500">
+            {items.length} record{items.length === 1 ? '' : 's'}
+          </p>
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center gap-3 p-8 text-gray-500">
-            <span
-              className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-emerald-600"
-              aria-hidden="true"
-            />
+          <div className="flex items-center justify-center gap-3 p-10 text-sm text-gray-500">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-emerald-600" />
             Loading...
           </div>
         ) : items.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            No records found.
+          <div className="p-10 text-center">
+            <p className="font-semibold text-gray-700">No records found.</p>
+            <p className="mt-1 text-sm text-gray-500">
+              Use the Add New button to create the first record.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/80">
+                  <th className="w-20 px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400">
                     #
                   </th>
 
                   {fields.slice(0, 4).map((field) => (
                     <th
                       key={field}
-                      className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-500"
+                      className="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-400"
                     >
                       {field.replace(/_/g, ' ')}
                     </th>
                   ))}
 
-                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase text-gray-500">
-                    Actions
+                  <th className="w-20 px-6 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Action
                   </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {items.map((item, index) => (
-                  <tr
-                    key={item.id || index}
-                    className="transition-colors duration-150 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {index + 1}
-                    </td>
+                {items.map((item, index) => {
+                  const menuKey = String(item.id ?? index);
 
-                    {fields.slice(0, 4).map((field) => (
-                      <td
-                        key={field}
-                        className="max-w-xs px-6 py-4 text-sm text-gray-700"
-                      >
-                        <div className="truncate">
-                          {String(item?.[field] ?? '-')}
-                        </div>
+                  return (
+                    <tr
+                      key={menuKey}
+                      className="transition hover:bg-gray-50/80"
+                    >
+                      <td className="px-6 py-4">
+                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-gray-100 px-2 text-xs font-bold text-gray-500">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
                       </td>
-                    ))}
 
-                    <td className="px-6 py-4">
-                      <div className="flex justify-end gap-2">
-                        {updateEnabled && item.id && (
-                          <button
-                            type="button"
-                            onClick={() => startEdit(item)}
-                            disabled={
-                              saving ||
-                              Boolean(deletingId)
-                            }
-                            className={`${buttonBase} rounded-md bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 hover:shadow-sm`}
-                          >
-                            Edit
-                          </button>
-                        )}
+                      {fields.slice(0, 4).map((field) => (
+                        <td
+                          key={field}
+                          className="max-w-xs px-4 py-4 text-sm text-gray-700"
+                        >
+                          <div className="max-w-xs truncate">
+                            {String(item?.[field] ?? '—')}
+                          </div>
+                        </td>
+                      ))}
 
-                        {deleteEnabled && item.id && (
-                          <button
-                            type="button"
-                            onClick={() => remove(item.id)}
-                            disabled={
-                              saving ||
-                              Boolean(deletingId)
-                            }
-                            className={`${buttonBase} inline-flex min-w-[68px] items-center justify-center gap-2 rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 hover:shadow-sm`}
-                          >
-                            {deletingId === item.id && (
-                              <span
-                                className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-300 border-t-red-700"
-                                aria-hidden="true"
-                              />
+                      <td className="relative px-6 py-4 text-right">
+                        {(updateEnabled || deleteEnabled) && item.id && (
+                          <>
+                            <button
+                              type="button"
+                              aria-label="Record actions"
+                              onClick={() =>
+                                setOpenMenuId((current) =>
+                                  current === menuKey ? null : menuKey
+                                )
+                              }
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                            >
+                              ⋮
+                            </button>
+
+                            {openMenuId === menuKey && (
+                              <>
+                                <button
+                                  type="button"
+                                  aria-label="Close actions"
+                                  onClick={() => setOpenMenuId(null)}
+                                  className="fixed inset-0 z-20 cursor-default"
+                                />
+
+                                <div className="absolute right-6 top-14 z-30 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 text-left shadow-xl">
+                                  {updateEnabled && (
+                                    <button
+                                      type="button"
+                                      onClick={() => startEdit(item)}
+                                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                                    >
+                                      <span>✎</span>
+                                      Edit
+                                    </button>
+                                  )}
+
+                                  {updateEnabled && deleteEnabled && (
+                                    <div className="my-1 border-t border-gray-100" />
+                                  )}
+
+                                  {deleteEnabled && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        remove(item.id);
+                                      }}
+                                      disabled={Boolean(deletingId)}
+                                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                    >
+                                      <span>⌫</span>
+                                      {deletingId === item.id
+                                        ? 'Deleting...'
+                                        : 'Delete'}
+                                    </button>
+                                  )}
+                                </div>
+                              </>
                             )}
-
-                            {deletingId === item.id
-                              ? 'Deleting...'
-                              : 'Delete'}
-                          </button>
+                          </>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

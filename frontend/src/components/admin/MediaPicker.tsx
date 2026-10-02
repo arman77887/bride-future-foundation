@@ -37,6 +37,7 @@ export default function MediaPicker({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const loadMedia = async () => {
     try {
@@ -206,8 +207,8 @@ export default function MediaPicker({
           </div>
         )}
 
-        <div className="mb-4">
-          <p className="mb-2 text-xs text-gray-500">
+        <div className="mb-5">
+          <p className="mb-3 text-xs text-gray-500">
             {mediaType === 'logo'
               ? 'Recommended: 512×512 px • 1:1 • JPG/PNG • Max 20 MB'
               : mediaType === 'gallery'
@@ -215,29 +216,67 @@ export default function MediaPicker({
                 : 'Recommended: 1920×1080 px • 16:9 • JPG/PNG • Max 20 MB'}
           </p>
 
-          <label
-            htmlFor={`media-picker-upload-${mediaType}`}
-            className="bff-button inline-flex cursor-pointer rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 active:scale-95"
-          >
-            {uploading ? 'Uploading...' : 'Upload New Image'}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setLibraryOpen((current) => !current)}
+              className={`group flex min-h-24 items-center gap-4 rounded-xl border-2 p-4 text-left transition ${
+                libraryOpen
+                  ? 'border-emerald-500 bg-emerald-50 ring-4 ring-emerald-50'
+                  : 'border-gray-200 bg-white hover:border-emerald-300 hover:shadow-sm'
+              }`}
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-2xl">
+                ▣
+              </span>
 
-            <input
-              id={`media-picker-upload-${mediaType}`}
-              type="file"
-              accept=".jpg,.jpeg,.png"
-              disabled={uploading}
-              className="hidden"
-              onChange={(e) => {
-                const selectedFile = e.target.files?.[0];
+              <span>
+                <span className="block text-sm font-bold text-gray-900">
+                  Website Media
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-gray-500">
+                  Choose from images already uploaded to the website.
+                </span>
+              </span>
+            </button>
 
-                if (selectedFile) {
-                  upload(selectedFile);
-                }
+            <label
+              htmlFor={`media-picker-upload-${mediaType}`}
+              className={`group flex min-h-24 cursor-pointer items-center gap-4 rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition hover:border-blue-300 hover:shadow-sm ${
+                uploading ? 'cursor-wait opacity-60' : ''
+              }`}
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-2xl">
+                ＋
+              </span>
 
-                e.currentTarget.value = '';
-              }}
-            />
-          </label>
+              <span>
+                <span className="block text-sm font-bold text-gray-900">
+                  {uploading ? 'Uploading...' : 'Phone Gallery'}
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-gray-500">
+                  Select a new image directly from your phone or device.
+                </span>
+              </span>
+
+              <input
+                id={`media-picker-upload-${mediaType}`}
+                type="file"
+                accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                disabled={uploading}
+                className="hidden"
+                onChange={(e) => {
+                  const selectedFile = e.target.files?.[0];
+
+                  if (selectedFile) {
+                    upload(selectedFile);
+                  }
+
+                  e.currentTarget.value = '';
+                }}
+              />
+            </label>
+          </div>
         </div>
 
         {error && (
@@ -246,7 +285,7 @@ export default function MediaPicker({
           </div>
         )}
 
-        {loading ? (
+        {libraryOpen && (loading ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
             Loading images...
           </div>
@@ -351,7 +390,7 @@ export default function MediaPicker({
               </div>
             )}
           </>
-        )}
+        ))}
       </div>
     </div>
   );

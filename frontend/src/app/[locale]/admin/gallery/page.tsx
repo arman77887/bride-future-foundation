@@ -56,6 +56,8 @@ export default function AdminGalleryPage({
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
   const [savingAlbum, setSavingAlbum] = useState(false);
   const [savingImage, setSavingImage] = useState(false);
+  const [albumFormOpen, setAlbumFormOpen] = useState(false);
+  const [openAlbumMenuId, setOpenAlbumMenuId] = useState<string | null>(null);
 
   const [titleBn, setTitleBn] = useState('');
   const [titleEn, setTitleEn] = useState('');
@@ -110,6 +112,8 @@ export default function AdminGalleryPage({
 
   function startEditAlbum(album: GalleryAlbum) {
     setEditingAlbum(album);
+    setAlbumFormOpen(true);
+    setOpenAlbumMenuId(null);
     setTitleBn(album.title_bn || '');
     setTitleEn(album.title_en || '');
     setSlug(album.slug || '');
@@ -153,6 +157,8 @@ export default function AdminGalleryPage({
       }
 
       resetAlbumForm();
+      setAlbumFormOpen(false);
+      setOpenAlbumMenuId(null);
       await loadAlbums();
     } catch (error) {
       console.error('Album save error:', error);
@@ -205,6 +211,7 @@ export default function AdminGalleryPage({
   }
 
   function startAddImage(album: GalleryAlbum) {
+    setOpenAlbumMenuId(null);
     setSelectedAlbum(album);
     setEditingImage(null);
     setMediaId(null);
@@ -405,227 +412,381 @@ export default function AdminGalleryPage({
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {isBn ? 'গ্যালারি ব্যবস্থাপনা' : 'Gallery Management'}
-          </h1>
+      <div className="mx-auto max-w-7xl space-y-6">
 
-          <p className="mt-2 text-gray-600">
-            {isBn
-              ? 'অ্যালবাম ও ছবিগুলো পরিচালনা করুন।'
-              : 'Manage albums and gallery images.'}
-          </p>
-        </div>
+        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">
+                {isBn ? 'কনটেন্ট ম্যানেজমেন্ট' : 'Content Management'}
+              </span>
+
+              <h1 className="mt-3 text-2xl font-black text-gray-950 sm:text-3xl">
+                {isBn ? 'গ্যালারি ব্যবস্থাপনা' : 'Gallery Management'}
+              </h1>
+
+              <p className="mt-2 text-sm text-gray-500">
+                {isBn
+                  ? 'অ্যালবাম তৈরি করুন এবং গ্যালারির ছবিগুলো পরিচালনা করুন।'
+                  : 'Create albums and manage gallery images.'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                resetAlbumForm();
+                setAlbumFormOpen(true);
+                setOpenAlbumMenuId(null);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"
+            >
+              <span className="text-xl leading-none">+</span>
+              {isBn ? 'নতুন অ্যালবাম' : 'Add New Album'}
+            </button>
+          </div>
+        </section>
 
         {message && (
-          <div className="rounded-lg bg-blue-50 px-4 py-3 text-blue-800">
+          <div
+            className={`rounded-xl border px-4 py-3 text-sm font-medium ${
+              messageType === 'error'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}
+          >
             {message}
           </div>
         )}
 
-        <section className="rounded-xl bg-white p-6 shadow">
-          <h2 className="mb-5 text-xl font-semibold">
-            {editingAlbum
-              ? isBn
-                ? 'অ্যালবাম সম্পাদনা'
-                : 'Edit Album'
-              : isBn
-                ? 'নতুন অ্যালবাম'
-                : 'New Album'}
-          </h2>
+        {albumFormOpen && (
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {editingAlbum
+                    ? isBn
+                      ? 'অ্যালবাম সম্পাদনা'
+                      : 'Edit Album'
+                    : isBn
+                      ? 'নতুন অ্যালবাম'
+                      : 'Create New Album'}
+                </h2>
 
-          <form onSubmit={saveAlbum} className="space-y-4">
-            <input
-              value={titleBn}
-              onChange={(e) => setTitleBn(e.target.value)}
-              placeholder="বাংলা শিরোনাম"
-              className="w-full rounded-lg border px-4 py-3"
-              required
-            />
+                <p className="mt-1 text-sm text-gray-500">
+                  {editingAlbum
+                    ? isBn
+                      ? 'নির্বাচিত অ্যালবামের তথ্য পরিবর্তন করুন।'
+                      : 'Update the selected album.'
+                    : isBn
+                      ? 'নতুন ফটো অ্যালবামের তথ্য দিন।'
+                      : 'Enter the details for the new photo album.'}
+                </p>
+              </div>
 
-            <input
-              value={titleEn}
-              onChange={(e) => setTitleEn(e.target.value)}
-              placeholder="English title"
-              className="w-full rounded-lg border px-4 py-3"
-              required
-            />
-
-            <input
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="slug"
-              className="w-full rounded-lg border px-4 py-3"
-              required
-            />
-
-            <textarea
-              value={descriptionBn}
-              onChange={(e) => setDescriptionBn(e.target.value)}
-              placeholder="বাংলা বিবরণ"
-              className="min-h-24 w-full rounded-lg border px-4 py-3"
-            />
-
-            <textarea
-              value={descriptionEn}
-              onChange={(e) => setDescriptionEn(e.target.value)}
-              placeholder="English description"
-              className="min-h-24 w-full rounded-lg border px-4 py-3"
-            />
-
-            <div className="flex gap-2">
               <button
-                type="submit"
-                disabled={savingAlbum}
-                className="rounded-lg bg-black px-5 py-3 font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-gray-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => {
+                  resetAlbumForm();
+                  setAlbumFormOpen(false);
+                }}
+                className="self-start rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:self-auto"
               >
-                {savingAlbum ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    {isBn ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}
-                  </span>
-                ) : editingAlbum ? (
-                  isBn ? 'আপডেট করুন' : 'Update Album'
-                ) : (
-                  isBn ? 'অ্যালবাম তৈরি করুন' : 'Create Album'
-                )}
+                {isBn ? 'বন্ধ করুন' : 'Close'}
               </button>
+            </div>
 
-              {editingAlbum && (
+            <form onSubmit={saveAlbum} className="space-y-5">
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    {isBn ? 'বাংলা শিরোনাম' : 'Title (Bangla)'}
+                  </label>
+                  <input
+                    value={titleBn}
+                    onChange={(e) => setTitleBn(e.target.value)}
+                    placeholder="বাংলা শিরোনাম"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Title (English)
+                  </label>
+                  <input
+                    value={titleEn}
+                    onChange={(e) => setTitleEn(e.target.value)}
+                    placeholder="English title"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Slug
+                </label>
+                <input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="album-slug"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    {isBn ? 'বাংলা বিবরণ' : 'Description (Bangla)'}
+                  </label>
+                  <textarea
+                    value={descriptionBn}
+                    onChange={(e) => setDescriptionBn(e.target.value)}
+                    placeholder="বাংলা বিবরণ"
+                    className="min-h-32 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Description (English)
+                  </label>
+                  <textarea
+                    value={descriptionEn}
+                    onChange={(e) => setDescriptionEn(e.target.value)}
+                    placeholder="English description"
+                    className="min-h-32 w-full rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={savingAlbum}
+                  className="rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {savingAlbum
+                    ? isBn
+                      ? 'সংরক্ষণ হচ্ছে...'
+                      : 'Saving...'
+                    : editingAlbum
+                      ? isBn
+                        ? 'অ্যালবাম আপডেট করুন'
+                        : 'Update Album'
+                      : isBn
+                        ? 'অ্যালবাম তৈরি করুন'
+                        : 'Create Album'}
+                </button>
+
                 <button
                   type="button"
-                  onClick={resetAlbumForm}
-                  className="rounded-lg border px-5 py-3 transition-all duration-200 hover:scale-[1.02] hover:bg-gray-100 active:scale-95"
+                  onClick={() => {
+                    resetAlbumForm();
+                    setAlbumFormOpen(false);
+                  }}
+                  className="rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                 >
                   {isBn ? 'বাতিল' : 'Cancel'}
                 </button>
-              )}
-            </div>
-          </form>
-        </section>
+              </div>
+            </form>
+          </section>
+        )}
 
-        <section className="rounded-xl bg-white p-6 shadow">
-          <h2 className="mb-5 text-xl font-semibold">
-            {isBn ? 'অ্যালবামসমূহ' : 'Albums'}
-          </h2>
+        <section className="overflow-visible rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                {isBn ? 'অ্যালবামসমূহ' : 'Existing Albums'}
+              </h2>
+              <p className="mt-1 text-xs text-gray-500">
+                {albums.length} {isBn ? 'টি অ্যালবাম' : `album${albums.length === 1 ? '' : 's'}`}
+              </p>
+            </div>
+          </div>
 
           {loading ? (
-            <p>{isBn ? 'লোড হচ্ছে...' : 'Loading...'}</p>
+            <div className="p-8 text-sm text-gray-500">
+              {isBn ? 'লোড হচ্ছে...' : 'Loading albums...'}
+            </div>
           ) : albums.length === 0 ? (
-            <p className="text-gray-500">
-              {isBn ? 'কোনো অ্যালবাম নেই।' : 'No albums yet.'}
-            </p>
+            <div className="p-8 text-center">
+              <p className="font-semibold text-gray-700">
+                {isBn ? 'কোনো অ্যালবাম নেই' : 'No albums yet'}
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                {isBn
+                  ? 'উপরের Add New Album বাটন থেকে প্রথম অ্যালবাম তৈরি করুন।'
+                  : 'Create your first album using the Add New Album button.'}
+              </p>
+            </div>
           ) : (
-            <div className="space-y-6">
-              {albums.map((album) => (
-                <div
-                  key={album.id}
-                  className="rounded-xl border p-5"
-                >
-                  <div className="flex flex-col justify-between gap-4 md:flex-row">
-                    <div>
-                      <h3 className="text-xl font-bold">
-                        {isBn ? album.title_bn : album.title_en}
-                      </h3>
+            <div className="divide-y divide-gray-100">
+              {albums.map((album, index) => (
+                <div key={album.id} className="relative p-5 sm:p-6">
+                  <div className="flex items-start gap-4">
+                    <span className="inline-flex h-9 min-w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 px-2 text-xs font-bold text-gray-500">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        {album.items?.length || 0}{' '}
-                        {isBn ? 'টি ছবি' : 'images'}
-                      </p>
-                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-lg font-bold text-gray-900">
+                            {isBn ? album.title_bn : album.title_en}
+                          </h3>
 
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => startAddImage(album)}
-                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:bg-green-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isBn ? 'ছবি যোগ করুন' : 'Add Image'}
-                      </button>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {album.items?.length || 0}{' '}
+                            {isBn ? 'টি ছবি' : `image${(album.items?.length || 0) === 1 ? '' : 's'}`}
+                            <span className="mx-2 text-gray-300">•</span>
+                            <span className="font-mono text-xs">/{album.slug}</span>
+                          </p>
+                        </div>
 
-                      <button
-                        type="button"
-                        onClick={() => startEditAlbum(album)}
-                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isBn ? 'এডিট' : 'Edit'}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => deleteAlbum(album.id)}
-                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isBn ? 'ডিলেট' : 'Delete'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {album.items && album.items.length > 0 && (
-                    <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                      {album.items.map((item) => {
-                        const imageUrl = resolveMediaUrl(
-                          item.image_url || item.file_url,
-                        );
-
-                        return (
-                          <div
-                            key={item.id}
-                            className="overflow-hidden rounded-lg border bg-white"
+                        <div className="relative shrink-0">
+                          <button
+                            type="button"
+                            aria-label="Album actions"
+                            onClick={() =>
+                              setOpenAlbumMenuId((current) =>
+                                current === album.id ? null : album.id
+                              )
+                            }
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-xl font-bold leading-none text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
                           >
-                            {imageUrl && (
-                              <img
-                                src={imageUrl}
-                                alt={
-                                  isBn
-                                    ? item.title_bn || 'Gallery image'
-                                    : item.title_en || 'Gallery image'
-                                }
-                                className="h-40 w-full object-cover"
+                            ⋮
+                          </button>
+
+                          {openAlbumMenuId === album.id && (
+                            <>
+                              <button
+                                type="button"
+                                aria-label="Close album actions"
+                                onClick={() => setOpenAlbumMenuId(null)}
+                                className="fixed inset-0 z-20 cursor-default"
                               />
-                            )}
 
-                            <div className="p-2">
-                              <p className="truncate text-sm font-medium">
-                                {isBn
-                                  ? item.title_bn || 'ছবি'
-                                  : item.title_en || 'Image'}
-                              </p>
-
-                              <div className="mt-2 flex gap-1">
+                              <div className="absolute right-0 top-12 z-30 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 text-left shadow-xl">
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    startEditImage(album, item)
-                                  }
-                                  className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white"
+                                  onClick={() => startAddImage(album)}
+                                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
                                 >
-                                  {isBn ? 'এডিট' : 'Edit'}
+                                  <span className="text-base">＋</span>
+                                  {isBn ? 'ছবি যোগ করুন' : 'Add Images'}
                                 </button>
 
                                 <button
                                   type="button"
-                                  onClick={() => deleteImage(item.id)}
-                                  disabled={deletingImageId === item.id}
-                                  className="flex-1 rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                  onClick={() => startEditAlbum(album)}
+                                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                                 >
-                                  {deletingImageId === item.id ? (
-                                    <span className="flex items-center justify-center gap-1">
-                                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                      {isBn ? 'মুছছে...' : 'Deleting...'}
-                                    </span>
-                                  ) : (
-                                    isBn ? 'ডিলেট' : 'Delete'
-                                  )}
+                                  <span>✎</span>
+                                  {isBn ? 'অ্যালবাম এডিট' : 'Edit Album'}
+                                </button>
+
+                                <div className="my-1 border-t border-gray-100" />
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenAlbumMenuId(null);
+                                    deleteAlbum(album.id);
+                                  }}
+                                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                                >
+                                  <span>⌫</span>
+                                  {isBn ? 'অ্যালবাম ডিলেট' : 'Delete Album'}
                                 </button>
                               </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {album.items && album.items.length > 0 && (
+                        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                          {album.items.map((item, imageIndex) => {
+                            const imageUrl = resolveMediaUrl(
+                              item.image_url || item.file_url,
+                            );
+
+                            return (
+                              <div
+                                key={item.id}
+                                className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-md"
+                              >
+                                <div className="relative aspect-square overflow-hidden bg-gray-100">
+                                  {imageUrl ? (
+                                    <img
+                                      src={imageUrl}
+                                      alt={
+                                        isBn
+                                          ? item.title_bn || 'Gallery image'
+                                          : item.title_en || 'Gallery image'
+                                      }
+                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full items-center justify-center text-xs text-gray-400">
+                                      No image
+                                    </div>
+                                  )}
+
+                                  <span className="absolute left-2 top-2 rounded-lg bg-black/65 px-2 py-1 text-[10px] font-bold text-white">
+                                    {String(imageIndex + 1).padStart(2, '0')}
+                                  </span>
+                                </div>
+
+                                <div className="p-3">
+                                  <p className="truncate text-xs font-semibold text-gray-700">
+                                    {isBn
+                                      ? item.title_bn || 'ছবি'
+                                      : item.title_en || 'Image'}
+                                  </p>
+
+                                  <p className="mt-1 text-[10px] text-gray-400">
+                                    {isBn ? 'ক্রম' : 'Order'}: {item.display_order ?? 0}
+                                  </p>
+
+                                  <div className="mt-3 grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditImage(album, item)}
+                                      className="rounded-lg bg-gray-100 px-2 py-2 text-xs font-bold text-gray-700 transition hover:bg-gray-200"
+                                    >
+                                      {isBn ? 'এডিট' : 'Edit'}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteImage(item.id)}
+                                      disabled={deletingImageId === item.id}
+                                      className="rounded-lg bg-red-50 px-2 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      {deletingImageId === item.id
+                                        ? isBn
+                                          ? 'মুছছে...'
+                                          : 'Deleting...'
+                                        : isBn
+                                          ? 'ডিলেট'
+                                          : 'Delete'}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -633,17 +794,27 @@ export default function AdminGalleryPage({
         </section>
 
         {selectedAlbum && (
-          <section className="rounded-xl bg-white p-6 shadow">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
-                {editingImage
-                  ? isBn
-                    ? 'ছবি সম্পাদনা'
-                    : 'Edit Image'
-                  : isBn
-                    ? 'ছবি যোগ করুন'
-                    : 'Add Image'}
-              </h2>
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                  {isBn ? 'নির্বাচিত অ্যালবাম' : 'Selected Album'}
+                </span>
+
+                <h2 className="mt-3 text-xl font-bold text-gray-900">
+                  {editingImage
+                    ? isBn
+                      ? 'ছবি সম্পাদনা'
+                      : 'Edit Image'
+                    : isBn
+                      ? 'ছবি যোগ করুন'
+                      : 'Add Images'}
+                </h2>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  {isBn ? selectedAlbum.title_bn : selectedAlbum.title_en}
+                </p>
+              </div>
 
               <button
                 type="button"
@@ -651,7 +822,7 @@ export default function AdminGalleryPage({
                   setSelectedAlbum(null);
                   resetImageForm();
                 }}
-                className="rounded-lg border px-4 py-2"
+                className="self-start rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 sm:self-auto"
               >
                 {isBn ? 'বন্ধ করুন' : 'Close'}
               </button>
@@ -668,7 +839,15 @@ export default function AdminGalleryPage({
                       )
                     : null
                 }
-                onChange={setMediaId}
+                onChange={(id) => {
+                  setMediaId(id);
+
+                  if (!editingImage && id) {
+                    setSelectedMediaIds((current) =>
+                      current.includes(id) ? current : [...current, id],
+                    );
+                  }
+                }}
                 multiple={!editingImage}
                 selectedValues={selectedMediaIds}
                 onMultipleChange={setSelectedMediaIds}
@@ -694,62 +873,80 @@ export default function AdminGalleryPage({
 
                   <button
                     type="button"
-                    onClick={() => setSelectedMediaIds([])}
-                    className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+                    onClick={() => {
+                      setSelectedMediaIds([]);
+                      setMediaId(null);
+                    }}
+                    className="text-sm font-semibold text-emerald-700 hover:text-emerald-900"
                   >
                     {isBn ? 'সব নির্বাচন বাতিল' : 'Clear selection'}
                   </button>
                 </div>
               )}
 
-              <input
-                value={imageTitleBn}
-                onChange={(e) => setImageTitleBn(e.target.value)}
-                placeholder="ছবির বাংলা শিরোনাম"
-                className="w-full rounded-lg border px-4 py-3"
-              />
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    {isBn ? 'ছবির বাংলা শিরোনাম' : 'Image Title (Bangla)'}
+                  </label>
+                  <input
+                    value={imageTitleBn}
+                    onChange={(e) => setImageTitleBn(e.target.value)}
+                    placeholder="ছবির বাংলা শিরোনাম"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
 
-              <input
-                value={imageTitleEn}
-                onChange={(e) => setImageTitleEn(e.target.value)}
-                placeholder="Image English title"
-                className="w-full rounded-lg border px-4 py-3"
-              />
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Image Title (English)
+                  </label>
+                  <input
+                    value={imageTitleEn}
+                    onChange={(e) => setImageTitleEn(e.target.value)}
+                    placeholder="Image English title"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+              </div>
 
-              <input
-                type="number"
-                min="0"
-                value={displayOrder}
-                onChange={(e) =>
-                  setDisplayOrder(Number(e.target.value))
-                }
-                placeholder="Display order"
-                className="w-full rounded-lg border px-4 py-3"
-              />
+              <div className="max-w-xs">
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  {isBn ? 'প্রদর্শনের ক্রম' : 'Display Order'}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={displayOrder}
+                  onChange={(e) => setDisplayOrder(Number(e.target.value))}
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
                   disabled={savingImage}
-                  className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:bg-green-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {savingImage ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      {isBn ? 'সংরক্ষণ হচ্ছে...' : 'Saving...'}
-                    </span>
-                  ) : editingImage ? (
-                    isBn ? 'ছবি আপডেট করুন' : 'Update Image'
-                  ) : (
-                    isBn ? 'ছবি যোগ করুন' : 'Add Image'
-                  )}
+                  {savingImage
+                    ? isBn
+                      ? 'সংরক্ষণ হচ্ছে...'
+                      : 'Saving...'
+                    : editingImage
+                      ? isBn
+                        ? 'ছবি আপডেট করুন'
+                        : 'Update Image'
+                      : isBn
+                        ? 'ছবি যোগ করুন'
+                        : 'Add Images'}
                 </button>
 
                 {editingImage && (
                   <button
                     type="button"
                     onClick={resetImageForm}
-                    className="rounded-lg border px-5 py-3 transition-all duration-200 hover:scale-[1.02] hover:bg-gray-100 active:scale-95"
+                    className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                   >
                     {isBn ? 'বাতিল' : 'Cancel'}
                   </button>
