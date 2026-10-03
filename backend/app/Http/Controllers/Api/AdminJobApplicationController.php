@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ApplicationApprovedMail;
 use App\Models\ApplicationStatusHistory;
 use App\Models\JobApplication;
+use App\Models\OfficerProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class AdminJobApplicationController extends Controller
 {
@@ -21,7 +25,10 @@ class AdminJobApplicationController extends Controller
         );
 
         $query = JobApplication::with([
-            'vacancy:id,title_bn,title_en',
+            'vacancy:id,department_id,position_id,title_bn,title_en',
+            'vacancy.department:id,name_bn,name_en',
+            'vacancy.position:id,title_bn,title_en',
+            'user:id,uid,name,email',
         ])->latest();
 
         if ($request->filled('status')) {
@@ -38,6 +45,7 @@ class AdminJobApplicationController extends Controller
                 $q->where('applicant_name', 'ILIKE', "%{$search}%")
                     ->orWhere('applicant_email', 'ILIKE', "%{$search}%")
                     ->orWhere('applicant_phone', 'ILIKE', "%{$search}%")
+                    ->orWhere('applicant_uid', 'ILIKE', "%{$search}%")
                     ->orWhere(
                         'application_reference',
                         'ILIKE',
@@ -66,9 +74,15 @@ class AdminJobApplicationController extends Controller
         );
 
         $application = JobApplication::with([
-            'vacancy',
+            'vacancy.department',
+            'vacancy.position',
+            'user:id,uid,name,email',
             'statusHistory.changedBy:id,email',
         ])->findOrFail($id);
+
+        $application->photo_url = $application->photo_path
+            ? Storage::disk('public')->url($application->photo_path)
+            : null;
 
         return response()->json([
             'success' => true,
@@ -80,10 +94,10 @@ class AdminJobApplicationController extends Controller
         Request $request,
         string $id
     ): JsonResponse {
-        $user = $request->user();
+        $admin = $request->user();
 
         abort_unless(
-            $user && $user->hasPermission('applications.status'),
+            $admin && $admin->hasPermission('applications.status'),
             403
         );
 
@@ -100,16 +114,21 @@ class AdminJobApplicationController extends Controller
             ],
         ]);
 
-        $application = JobApplication::findOrFail($id);
+        $newStatus = $validated['status'];
+
+        $application = JobApplication::with([
+            'vacancy.department',
+            'vacancy.position',
+            'user',
+        ])->findOrFail($id);
 
         $previousStatus = $application->status;
-        $newStatus = $validated['status'];
 
         if ($previousStatus === $newStatus) {
             return response()->json([
                 'success' => true,
                 'message' => 'Application status is already '.$newStatus.'.',
-                'data' => $application->fresh()->load('vacancy'),
+                'data' => $application,
             ]);
         }
 
@@ -118,7 +137,7 @@ class AdminJobApplicationController extends Controller
             $previousStatus,
             $newStatus,
             $validated,
-            $user
+            $admin
         ) {
             $application->update([
                 'status' => $newStatus,
@@ -126,20 +145,85 @@ class AdminJobApplicationController extends Controller
 
             ApplicationStatusHistory::create([
                 'application_id' => $application->id,
-                'changed_by' => $user->id,
+                'changed_by' => $admin->id,
                 'previous_status' => $previousStatus,
                 'new_status' => $newStatus,
                 'note' => $validated['note'] ?? null,
                 'created_at' => now(),
             ]);
+
+            if ($newStatus === 'SELECTED') {
+                $application->refresh()->load([
+                    'vacancy.department',
+                    'vacancy.position',
+                    'user',
+                ]);
+
+                if (!$application->user_id || !$application->user) {
+                    abort(422, 'The applicant UID is not linked to a registered user.');
+                }
+
+                if (!$application->vacancy?->department_id) {
+                    abort(422, 'The vacancy does not have a department.');
+                }
+
+                if (!$application->vacancy?->position_id) {
+                    abort(422, 'The vacancy does not have a position.');
+                }
+
+                $existingMember = OfficerProfile::query()
+                    ->where('user_id', $application->user_id)
+                    ->first();
+
+                if ($existingMember) {
+                    abort(
+                        422,
+                        'This registered user already has a Foundation Member profile.'
+                    );
+                }
+
+                OfficerProfile::create([
+                    'user_id' => $application->user_id,
+                    'department_id' => $application->vacancy->department_id,
+                    'position_id' => $application->vacancy->position_id,
+                    'official_id' => $application->application_reference,
+                    'status' => 'APPROVED',
+                    'is_public' => true,
+                    'name' => $application->applicant_name,
+                    'email_personal' => $application->applicant_email,
+                    'phone' => $application->applicant_phone,
+                    'address' => $application->applicant_address,
+                    'nid' => $application->applicant_nid,
+                    'passport' => $application->applicant_passport,
+                    'avatar_url' => $application->photo_path
+                        ? Storage::disk('public')->url($application->photo_path)
+                        : null,
+                ]);
+            }
         });
+
+        $application = $application->fresh()->load([
+            'vacancy.department',
+            'vacancy.position',
+            'user:id,uid,name,email',
+            'statusHistory.changedBy:id,email',
+        ]);
+
+        if (
+            $newStatus === 'SELECTED'
+            && filled($application->applicant_email)
+        ) {
+            Mail::to($application->applicant_email)->send(
+                new ApplicationApprovedMail($application)
+            );
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Application status updated successfully.',
-            'data' => $application
-                ->fresh()
-                ->load('vacancy', 'statusHistory.changedBy:id,email'),
+            'message' => $newStatus === 'SELECTED'
+                ? 'Application approved and Foundation Member profile created successfully.'
+                : 'Application status updated successfully.',
+            'data' => $application,
         ]);
     }
 }

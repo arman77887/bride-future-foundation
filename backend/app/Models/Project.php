@@ -24,4 +24,9 @@ class Project extends Model
         return $this->belongsTo(Media::class, 'cover_media_id');
     }
 
+    public function donations()
+    {
+        return $this->hasMany(Donation::class, 'project_id');
+    }
+
 }

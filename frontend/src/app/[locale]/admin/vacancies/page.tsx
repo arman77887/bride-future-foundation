@@ -75,6 +75,9 @@ export default function VacanciesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [addingOption, setAddingOption] = useState<
+    'department' | 'position' | null
+  >(null);
 
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -125,6 +128,88 @@ export default function VacanciesPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const addDepartment = async () => {
+    const nameEn = window.prompt('Department name in English:')?.trim();
+    if (!nameEn) return;
+
+    const nameBn = window.prompt('Department name in Bangla:')?.trim();
+    if (!nameBn) return;
+
+    try {
+      setAddingOption('department');
+      setError('');
+      setMessage('');
+
+      const response = await api.post('/admin/officers/departments', {
+        name_en: nameEn,
+        name_bn: nameBn,
+      });
+
+      const created = response?.data?.data;
+
+      if (!created?.id) {
+        throw new Error('Department was created but no ID was returned.');
+      }
+
+      setDepartments((current) => [...current, created]);
+      setForm((current) => ({
+        ...current,
+        department_id: created.id,
+      }));
+
+      setMessage('Department created and selected successfully.');
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Failed to create department.',
+      );
+    } finally {
+      setAddingOption(null);
+    }
+  };
+
+  const addPosition = async () => {
+    const titleEn = window.prompt('Position name in English:')?.trim();
+    if (!titleEn) return;
+
+    const titleBn = window.prompt('Position name in Bangla:')?.trim();
+    if (!titleBn) return;
+
+    try {
+      setAddingOption('position');
+      setError('');
+      setMessage('');
+
+      const response = await api.post('/admin/officers/positions', {
+        title_en: titleEn,
+        title_bn: titleBn,
+      });
+
+      const created = response?.data?.data;
+
+      if (!created?.id) {
+        throw new Error('Position was created but no ID was returned.');
+      }
+
+      setPositions((current) => [...current, created]);
+      setForm((current) => ({
+        ...current,
+        position_id: created.id,
+      }));
+
+      setMessage('Position created and selected successfully.');
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Failed to create position.',
+      );
+    } finally {
+      setAddingOption(null);
+    }
+  };
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -381,6 +466,17 @@ export default function VacanciesPage() {
                 </option>
               ))}
             </select>
+
+              <button
+                type="button"
+                onClick={addDepartment}
+                disabled={addingOption !== null}
+                className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {addingOption === 'department'
+                  ? 'Adding Department...'
+                  : '+ Add Department'}
+              </button>
           </div>
 
           <div>
@@ -404,6 +500,17 @@ export default function VacanciesPage() {
                 </option>
               ))}
             </select>
+
+              <button
+                type="button"
+                onClick={addPosition}
+                disabled={addingOption !== null}
+                className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {addingOption === 'position'
+                  ? 'Adding Position...'
+                  : '+ Add Position'}
+              </button>
           </div>
 
           <div>

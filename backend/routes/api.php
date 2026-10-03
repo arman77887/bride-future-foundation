@@ -345,6 +345,13 @@ Route::get('/subscriptions/unsubscribe/{token}', [SubscriptionController::class,
         ])->middleware('permission:officers.verify');
 
 
+        Route::delete('/officers/{id}', [
+            OfficerController::class,
+            'destroy'
+        ])->middleware('permission:officers.update');
+
+
+
         /*
         | Vacancies
         */

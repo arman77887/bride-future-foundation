@@ -4,14 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\JobApplication\StoreJobApplicationRequest;
+use App\Mail\AdminNotificationMail;
 use App\Models\ApplicationStatusHistory;
 use App\Models\JobApplication;
+use App\Models\User;
 use App\Models\Vacancy;
-use App\Mail\AdminNotificationMail;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class JobApplicationController extends Controller
 {
@@ -19,67 +22,99 @@ class JobApplicationController extends Controller
     {
         $data = $request->validated();
 
-        $application = DB::transaction(function () use ($data) {
-            $vacancy = Vacancy::query()
-                ->whereKey($data['vacancy_id'])
-                ->lockForUpdate()
-                ->first();
+        $user = User::query()
+            ->where('uid', $data['applicant_uid'])
+            ->firstOrFail();
 
-            if (!$vacancy) {
-                abort(404, 'Vacancy not found.');
-            }
+        $photoPath = $request->file('photo')->store(
+            'job-applications/photos',
+            'public'
+        );
 
-            if (!$vacancy->is_active) {
-                abort(422, 'This vacancy is currently inactive.');
-            }
+        unset($data['photo']);
 
-            if ($vacancy->status !== 'PUBLISHED') {
-                abort(422, 'Applications are not currently open for this vacancy.');
-            }
+        $data['user_id'] = $user->id;
+        $data['photo_path'] = $photoPath;
 
-            if ($vacancy->deadline->isPast()) {
-                abort(422, 'The application deadline has passed.');
-            }
+        try {
+            $application = DB::transaction(function () use ($data) {
+                $vacancy = Vacancy::query()
+                    ->whereKey($data['vacancy_id'])
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($vacancy->application_limit !== null) {
-                $applicationCount = JobApplication::query()
-                    ->where('vacancy_id', $vacancy->id)
-                    ->where('status', '!=', 'WITHDRAWN')
-                    ->count();
-
-                if ($applicationCount >= $vacancy->application_limit) {
-                    abort(422, 'The application limit for this vacancy has been reached.');
+                if (!$vacancy) {
+                    abort(404, 'Vacancy not found.');
                 }
-            }
 
-            do {
-                $reference = 'BFF-' . now()->format('Y') . '-' . strtoupper(Str::random(8));
-            } while (
-                JobApplication::where('application_reference', $reference)->exists()
-            );
+                if (!$vacancy->is_active) {
+                    abort(422, 'This vacancy is currently inactive.');
+                }
 
-            $data['application_reference'] = $reference;
-            $data['status'] = 'PENDING';
+                if ($vacancy->status !== 'PUBLISHED') {
+                    abort(422, 'Applications are not currently open for this vacancy.');
+                }
 
-            $application = JobApplication::create($data);
+                if (!$vacancy->deadline || $vacancy->deadline->isPast()) {
+                    abort(422, 'The application deadline has passed.');
+                }
 
-            ApplicationStatusHistory::create([
-                'application_id' => $application->id,
-                'changed_by' => null,
-                'previous_status' => 'NEW',
-                'new_status' => 'PENDING',
-                'note' => 'Application submitted.',
-                'created_at' => now(),
-            ]);
+                $alreadyApplied = JobApplication::query()
+                    ->where('vacancy_id', $vacancy->id)
+                    ->where('user_id', $data['user_id'])
+                    ->where('status', '!=', 'WITHDRAWN')
+                    ->exists();
 
-            return $application;
-        });
+                if ($alreadyApplied) {
+                    abort(422, 'You have already applied for this vacancy.');
+                }
 
-        $application->load('vacancy');
+                if ($vacancy->application_limit !== null) {
+                    $applicationCount = JobApplication::query()
+                        ->where('vacancy_id', $vacancy->id)
+                        ->where('status', '!=', 'WITHDRAWN')
+                        ->count();
+
+                    if ($applicationCount >= $vacancy->application_limit) {
+                        abort(422, 'The application limit for this vacancy has been reached.');
+                    }
+                }
+
+                do {
+                    $reference = 'BFF-' . now()->format('Y') . '-' . strtoupper(Str::random(8));
+                } while (
+                    JobApplication::where('application_reference', $reference)->exists()
+                );
+
+                $data['application_reference'] = $reference;
+                $data['status'] = 'PENDING';
+
+                $application = JobApplication::create($data);
+
+                ApplicationStatusHistory::create([
+                    'application_id' => $application->id,
+                    'changed_by' => null,
+                    'previous_status' => 'NEW',
+                    'new_status' => 'PENDING',
+                    'note' => 'Application submitted.',
+                    'created_at' => now(),
+                ]);
+
+                return $application;
+            });
+        } catch (Throwable $e) {
+            Storage::disk('public')->delete($photoPath);
+            throw $e;
+        }
+
+        $application->load([
+            'vacancy.department',
+            'vacancy.position',
+            'user:id,uid,name,email',
+        ]);
 
         $recipients = config('mail.notification_recipients', [
             'tha.crypticx.official@gmail.com',
-            'dyppomahadi2000@gmail.com',
         ]);
 
         Mail::to($recipients)->send(
@@ -88,12 +123,17 @@ class JobApplicationController extends Controller
                 title: 'New Job Application Submitted',
                 data: [
                     'application_reference' => $application->application_reference,
+                    'applicant_uid' => $application->applicant_uid,
                     'applicant_name' => $application->applicant_name,
                     'applicant_email' => $application->applicant_email,
                     'applicant_phone' => $application->applicant_phone,
                     'vacancy' => $application->vacancy?->title_en
                         ?? $application->vacancy?->title_bn
                         ?? $application->vacancy_id,
+                    'department' => $application->vacancy?->department?->name_en
+                        ?? $application->vacancy?->department?->name_bn,
+                    'position' => $application->vacancy?->position?->title_en
+                        ?? $application->vacancy?->position?->title_bn,
                     'status' => $application->status,
                     'application_id' => $application->id,
                 ],

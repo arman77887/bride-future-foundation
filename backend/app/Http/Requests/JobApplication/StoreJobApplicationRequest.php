@@ -15,11 +15,16 @@ class StoreJobApplicationRequest extends FormRequest
     {
         return [
             'vacancy_id' => ['required', 'uuid', 'exists:vacancies,id'],
+            'applicant_uid' => ['required', 'string', 'max:100', 'exists:users,uid'],
             'applicant_name' => ['required', 'string', 'max:255'],
-            'applicant_email' => ['required', 'email', 'max:255'],
+            'applicant_email' => ['nullable', 'email', 'max:255'],
             'applicant_phone' => ['required', 'string', 'max:20'],
-            'resume_path' => ['required', 'string'],
-            'cover_letter' => ['nullable', 'string'],
+            'applicant_address' => ['required', 'string', 'max:2000'],
+            'applicant_nid' => ['nullable', 'string', 'max:100'],
+            'applicant_passport' => ['nullable', 'string', 'max:100'],
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'resume_path' => ['nullable', 'string'],
+            'cover_letter' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

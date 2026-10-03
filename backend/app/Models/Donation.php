@@ -14,6 +14,7 @@ class Donation extends Model
 
     protected $fillable = [
         'donation_method_id',
+        'project_id',
         'donor_name',
         'amount',
         'currency_code',
@@ -40,6 +41,14 @@ class Donation extends Model
         return $this->belongsTo(
             DonationMethod::class,
             'donation_method_id'
+        );
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(
+            Project::class,
+            'project_id'
         );
     }
 

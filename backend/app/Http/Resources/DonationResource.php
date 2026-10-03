@@ -29,6 +29,19 @@ class DonationResource extends JsonResource
                     'instructions_en' => $this->donationMethod->instructions_en,
                 ];
             }),
+            'project' => $this->whenLoaded('project', function () {
+                if (!$this->project) {
+                    return null;
+                }
+
+                return [
+                    'id' => $this->project->id,
+                    'title_bn' => $this->project->title_bn,
+                    'title_en' => $this->project->title_en,
+                    'slug' => $this->project->slug,
+                    'status' => $this->project->status,
+                ];
+            }),
             'created_at' => $this->created_at,
         ];
     }

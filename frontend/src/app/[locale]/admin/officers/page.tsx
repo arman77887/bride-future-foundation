@@ -294,6 +294,38 @@ export default function OfficersPage() {
     }
   };
 
+  const removeMember = async (officer: Officer) => {
+    const confirmed = window.confirm(
+      `Remove "${officer.name}" from Foundation Members?\n\n` +
+        'The member profile will be removed, but the user account will remain.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setProcessing(officer.id);
+      setError('');
+      setMessage('');
+
+      await api.delete(`/officers/${officer.id}`);
+
+      if (editingId === officer.id) {
+        closeForm();
+      }
+
+      setMessage(`${officer.name} removed successfully.`);
+      await loadOfficers();
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Unable to remove member.'
+      );
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   const statusClass = (status: string) => {
     switch (status) {
       case 'APPROVED':
@@ -668,6 +700,17 @@ export default function OfficersPage() {
                         >
                           Edit
                         </button>
+
+                          <button
+                            type="button"
+                            disabled={processing === officer.id}
+                            onClick={() => removeMember(officer)}
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {processing === officer.id
+                              ? 'Processing...'
+                              : 'Remove'}
+                          </button>
 
                         {officer.status !== 'APPROVED' && (
                           <>

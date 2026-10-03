@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class OfficerController extends Controller
 {
@@ -24,6 +25,7 @@ class OfficerController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $officers = OfficerProfile::with(['department', 'position', 'avatarMedia'])
+            ->where('status', 'APPROVED')
             ->where('is_public', true)
             ->paginate(15);
 
@@ -212,6 +214,29 @@ class OfficerController extends Controller
         return response()->json([
             'message' => 'Officer verification status updated',
             'data' => new OfficerProfileResource($officer),
+        ]);
+    }
+
+    /**
+     * Remove an officer/member profile.
+     *
+     * The linked user account is intentionally preserved.
+     */
+    public function destroy(string $id): JsonResponse
+    {
+        $officer = OfficerProfile::findOrFail($id);
+
+        DB::transaction(function () use ($officer) {
+            // Verification history uses ON DELETE RESTRICT.
+            $officer->verificationHistory()->delete();
+
+            // Officer documents use ON DELETE CASCADE.
+            // The linked users record is not deleted.
+            $officer->delete();
+        });
+
+        return response()->json([
+            'message' => 'Member removed successfully',
         ]);
     }
 }

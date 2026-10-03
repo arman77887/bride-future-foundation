@@ -12,10 +12,16 @@ class JobApplication extends Model
 
     protected $fillable = [
         'vacancy_id',
+        'user_id',
         'application_reference',
+        'applicant_uid',
         'applicant_name',
         'applicant_email',
         'applicant_phone',
+        'applicant_address',
+        'applicant_nid',
+        'applicant_passport',
+        'photo_path',
         'resume_path',
         'cover_letter',
         'status',
@@ -24,6 +30,11 @@ class JobApplication extends Model
     public function vacancy()
     {
         return $this->belongsTo(Vacancy::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function statusHistory()

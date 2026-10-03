@@ -34,6 +34,7 @@ class DonationManagementController extends Controller
 
         $query = Donation::with([
             'donationMethod',
+            'project',
             'verifier',
             'verificationHistories.reviewer',
         ]);
@@ -51,7 +52,13 @@ class DonationManagementController extends Controller
             });
         }
 
-        $donations = $query->latest()->paginate(15);
+        if ($request->input('fund') === 'general') {
+            $query->whereNull('project_id');
+        } elseif ($request->filled('project_id')) {
+            $query->where('project_id', $request->input('project_id'));
+        }
+
+        $donations = $query->latest()->paginate(15)->withQueryString();
         return DonationResource::collection($donations);
     }
 
@@ -88,7 +95,9 @@ class DonationManagementController extends Controller
 
         return response()->json([
             'message' => 'Donation submitted successfully and is pending verification',
-            'data' => new DonationResource($donation),
+            'data' => new DonationResource(
+                $donation->load(['donationMethod', 'project'])
+            ),
         ], 201);
     }
 
@@ -138,14 +147,31 @@ class DonationManagementController extends Controller
     {
         $this->authorize('viewAny', Donation::class);
 
+        $baseQuery = Donation::query();
+
+        if ($request->input('fund') === 'general') {
+            $baseQuery->whereNull('project_id');
+        } elseif ($request->filled('project_id')) {
+            $baseQuery->where('project_id', $request->input('project_id'));
+        }
+
         return response()->json([
-            'total_donations' => Donation::count(),
-            'pending' => Donation::where('status', 'PENDING')->count(),
-            'under_review' => Donation::where('status', 'UNDER_REVIEW')->count(),
-            'verified' => Donation::where('status', 'VERIFIED')->count(),
-            'rejected' => Donation::where('status', 'REJECTED')->count(),
-            'reversed' => Donation::where('status', 'REVERSED')->count(),
-            'total_verified_amount' => Donation::where('status', 'VERIFIED')->sum('amount'),
+            'total_donations' => (clone $baseQuery)->count(),
+            'pending' => (clone $baseQuery)->where('status', 'PENDING')->count(),
+            'under_review' => (clone $baseQuery)->where('status', 'UNDER_REVIEW')->count(),
+            'verified' => (clone $baseQuery)->where('status', 'VERIFIED')->count(),
+            'rejected' => (clone $baseQuery)->where('status', 'REJECTED')->count(),
+            'reversed' => (clone $baseQuery)->where('status', 'REVERSED')->count(),
+            'verified_amounts' => [
+                'BDT' => (clone $baseQuery)
+                    ->where('status', 'VERIFIED')
+                    ->where('currency_code', 'BDT')
+                    ->sum('amount'),
+                'USD' => (clone $baseQuery)
+                    ->where('status', 'VERIFIED')
+                    ->where('currency_code', 'USD')
+                    ->sum('amount'),
+            ],
         ]);
     }
 
@@ -161,30 +187,66 @@ class DonationManagementController extends Controller
             "Expires" => "0",
         ];
 
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID', 'Donor Name', 'Amount', 'Currency', 'Donation Method', 'Account Identifier', 'Transaction ID', 'Sender Info', 'Status', 'Created At']);
+        $fund = $request->input('fund');
+        $projectId = $request->input('project_id');
 
-            Donation::with('donationMethod')->chunk(200, function ($donations) use ($file) {
-                foreach ($donations as $donation) {
-                    fputcsv($file, [
-                        $donation->id,
-                        $donation->donor_name,
-                        $donation->amount,
-                        $donation->currency_code,
-                        $donation->donationMethod?->name_en ?? $donation->donationMethod?->name_bn ?? '-',
-                        $donation->donationMethod?->account_identifier ?? '-',
-                        $donation->transaction_id,
-                        $donation->sender_info,
-                        $donation->status,
-                        $donation->created_at,
-                    ]);
-                }
-            });
+        $callback = function () use ($fund, $projectId) {
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, [
+                'ID',
+                'Donor Name',
+                'Fund / Project',
+                'Amount',
+                'Currency',
+                'Donation Method',
+                'Account Identifier',
+                'Transaction ID',
+                'Sender Info',
+                'Status',
+                'Created At',
+            ]);
+
+            $query = Donation::with([
+                'donationMethod',
+                'project',
+            ]);
+
+            if ($fund === 'general') {
+                $query->whereNull('project_id');
+            } elseif (!empty($projectId)) {
+                $query->where('project_id', $projectId);
+            }
+
+            $query
+                ->orderBy('created_at')
+                ->chunk(200, function ($donations) use ($file) {
+                    foreach ($donations as $donation) {
+                        fputcsv($file, [
+                            $donation->id,
+                            $donation->donor_name,
+                            $donation->project
+                                ? ($donation->project->title_en
+                                    ?: $donation->project->title_bn)
+                                : 'General Donation',
+                            $donation->amount,
+                            $donation->currency_code,
+                            $donation->donationMethod?->name_en
+                                ?? $donation->donationMethod?->name_bn
+                                ?? '-',
+                            $donation->donationMethod?->account_identifier ?? '-',
+                            $donation->transaction_id,
+                            $donation->sender_info,
+                            $donation->status,
+                            $donation->created_at,
+                        ]);
+                    }
+                });
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
     }
+
 }

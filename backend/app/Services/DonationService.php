@@ -54,6 +54,7 @@ class DonationService
 
             $donation = Donation::create([
                 'donation_method_id' => $data['donation_method_id'],
+                'project_id' => $data['project_id'] ?? null,
                 'donor_name' => $data['donor_name'] ?? null,
                 'amount' => $data['amount'],
                 'currency_code' => $data['currency'] ?? 'BDT',
